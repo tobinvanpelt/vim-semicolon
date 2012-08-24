@@ -1,3 +1,10 @@
+" vim-semicolon
+" 
+" https://github.com/tobinvanpelt/vim-semicolon.git
+"
+" Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+" See :help license.
+
 " Todo: cahnge all g: to s: ?
 
 let s:base_dir = expand('<sfile>:h') . '/../scripts/'
@@ -14,7 +21,7 @@ func! semicolon#toggle_breakpoint()
 
     if g:semicolon_autosave_on_toggle
         write
-    endif
+    endif                                                                          
 
     call s:find_breakpoints()
 endfunc

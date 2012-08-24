@@ -1,3 +1,10 @@
+" vim-semicolon
+" 
+" https://github.com/tobinvanpelt/vim-semicolon.git
+"
+" Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+" See :help license.
+
 nnoremap <silent> <buffer> ;r :SemicolonRun<cr>
 nnoremap <buffer> ;rr :call semicolon#run_args_prompt()<cr>
 

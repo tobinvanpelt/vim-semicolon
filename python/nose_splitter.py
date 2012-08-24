@@ -1,10 +1,18 @@
-"""
+""""
+vim-semicolon
+
+https://github.com/tobinvanpelt/vim-semicolon.git
+
 Splits nose output into a summary of results sent to stdout and of error
 results sent to a file.
 
 This module was extended from https://github.com/nvie/nose-machineout
 
+Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+See :help license.
+
 """
+
 
 import os
 import sys

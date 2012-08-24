@@ -1,4 +1,9 @@
-" Compiler file for nose
+" vim-semicolon
+" 
+" https://github.com/tobinvanpelt/vim-semicolon.git
+"
+" Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+" See :help license.
 
 if exists("current_compiler")
   finish

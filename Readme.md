@@ -1,51 +1,39 @@
 Semicolon
 =========
 
-Semicolon is a pytyhon IDE for vim that relies on tmux. It incorporates a
-python/ipython console, testing using nose, debugging, and debugging tests.
+Semicolon is a pytyhon IDE for vim that utilizes shell based workflow (zsh
+recommended) that is manged with tmux. It incorporates an ipython console,
+testing using nose, and the debugging of both regular scripts
+and test modules.
 
-To utilize semicolon vim must be run within tmux as:
+To utilize semicolon vim must be run from within a tmux seesion:
 
     $tmux new vim
 
-The IDE consists of vim as an editor and provides a console that includes a
-debugging console on the left and an general interactive python console on the
-right.
+The IDE consists of vim as the 'edit' pane, a 'debug' pane where the ipdb
+debugger executes, and a 'ipython' pane.  Tmux is used to organize these
+various panes.  Most of the time only the 'edit' pane is visible, but the
+console can toggle open/close using `;;`.  When the console is not visible
+beneath the 'edit' pane, the console panes are in their own 'console' window
+that can be navigated to with typical tmux commands. This seperate console
+window has an additional shell pane as well for conveince.
 
-NOTE: 
+Breakpoints for debugging are directly entered into python .py files with the
+convenience of `;<space>` (see below). Furthermore, you may list or delete all
+breakpoints within the project.  The project is defined by the project that was
+in effect (using virtualenvwrapper) at the time vim was started. Otherwise the
+project defaults to only the current directory and does not incorporate
+additional subdirectories.
 
-Project is set to virtualenv project that is effect at start. Can't change once
-running.
-
-Compatible with virtualenv.
-
-Go to console window in other tmux window.
-
-Describe debug behavior.
-
-C-a ; - go back
-
-exit ipython respawns
-
-convenient terminal pane
-
-mark all files with license / copyright
-
-
-Console:
-
-Debugging:
-
-Testing:
+Note: tmux by default (conveniently for this plugin) binds ';' to 'last-pane' -
+this a convenient binding to remember to switch to the console pane and then
+back to vim quickly.
 
 
 Dependencies
 ------------
-
-Currently it has the following vim dependencies:
-    - tmux
-
-It has the following python dependencies.  Install using pip:
+Semicolon depends on tmux as well as the following python moduels: 
+    
     - nose
     - ipython
     - ipdb
@@ -56,10 +44,8 @@ Key Commands
 Console:
 
 - `;;`  toggles open/close the console split pane below vim
-- `;i`  open console and select ipython
-- `;ii` reset ipython and select it
-
-(Note C-a ; is last pane)
+- `;i`  open console and select ipython pane
+- `;ii` reset ipython pane and select it
 
 
 Breakpoints:
@@ -72,17 +58,17 @@ Debugging:
 
 - `;r`  runs the current .py file
 - `;rr` prompts for arguments to run the current .py file
-- `;R`  prompts for filename and argument to run 
+- `;R`  prompts for filename and arguments to run 
 - `;d`  debugs the current python test file (uses nosetests)
 
 Testing:
 
 - `;T`  runs all project tests
 - `;t`  runs the curretn python test file
-- `;tt` prompts for nosetests to run in current test
+- `;tt` prompts for nosetests to run in current test file
 
 
-Additional useful quickfix commands:
+Additional useful quickfix commands for the breakpoint list or test failures:
 
 - `:cwindow` opens the quickfix window
 - `:cclose` closes the quickfix window
@@ -103,7 +89,6 @@ Commands
 - `:SemicolonRunTest` <test> (run current test file or <test> within current) 
 
 - `:SemicolonRun` <arguments> (pass in <arguments> to current file)
-- `:SemicolonRunFile` <file> <arguments> (run any python file)
 - `:SemicolonDebugTest` (run the current test file)
 
 - `:SemicolonToggleConsole`
@@ -120,22 +105,26 @@ The default is:
 
     import ipdb; ipdb.set_trace()
 
-The project scope is defined as the current directory and all sub directories.
-
 
 Todos and Future Functionality
 ------------------------------
 
-- change name of breakpoint buffer
+- change name of breakpoint buffer sub window
 - highlight breakpoints in file
-- travel to breakpoint when navigating up down in breakppoint window
-- possibly split breakpoint windows for a preview
+- travel to breakpoint when navigating up down in breakppoint window with
+  preview
 - put the name of the next line to be executed in the breakpoint list
 
 - when running tests comment out all breakpoints
 - when deleting a breakpoint - preserve the yank buffer
 
 - debug just a specific test from the quickfix window
-- expand the concept of a project
+- allow for project to be defined from within semicolon
 
-- configure with python/ipyton or pdb/ipdb
+- configure to be used with python/ipyton or pdb/ipdb
+
+
+License
+-------
+Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+See :help license.

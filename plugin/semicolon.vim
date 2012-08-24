@@ -1,7 +1,13 @@
+" vim-semicolon
+" 
+" https://github.com/tobinvanpelt/vim-semicolon.git
+"
+" Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+" See :help license.
+
 call semicolon#start()
 
 " Key Commands
-
 nnoremap <silent> ;; :SemicolonToggleConsole<cr>
 nnoremap <silent> ;i :SemicolonIPython<cr>
 nnoremap <silent> ;ii :SemicolonRestartIPython<cr>
