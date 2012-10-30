@@ -362,7 +362,7 @@ func! s:make_console()
         call system('tmux setw -u -t console monitor-activity')
 
         call s:stamp_pane('console', 'terminal')
-        call s:set_virtualenv()
+        call s:set_virtualenv('console')
         call s:clear_pane('console')
         let g:semicolon_terminal_pane_id = s:get_last_pane_id('console')
     endif
@@ -408,7 +408,6 @@ func! s:respawn_debug(...)
     endif
 
     if g:semicolon_console_visible
-        echo 'XXX'
         let full_cmd .= ' ' . '-o'
     endif
 
@@ -469,8 +468,8 @@ func! s:stamp_pane(pane, name)
 endfunc
 
 
-func! s:set_virtualenv()
-    call system('source ' . $VIRTUAL_ENV . '/bin/activate' )
+func! s:set_virtualenv(pane)
+    call s:send_keys(a:pane, 'source ' . $VIRTUAL_ENV . '/bin/activate' )
 endfunc
 
 
@@ -503,7 +502,6 @@ func! s:find_breakpoints()
     let num = len(getqflist())
     if num == 0
         redraw
-        echo tdir
         echo 'No breakpoints.'
     endif
 
