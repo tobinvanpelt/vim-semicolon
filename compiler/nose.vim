@@ -5,6 +5,10 @@
 " Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
 " See :help license.
 
+if !has('unix')
+    finish
+endif
+
 if exists("current_compiler")
   finish
 endif

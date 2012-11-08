@@ -79,6 +79,12 @@ func! semicolon#clear_breakpoints()
 endfunc
 
 
+" exit now if not unix
+if !has('unix')
+    finish
+endif
+
+
 "------------------------------------------------------------------------------
 
 " toggles the console on/off by moving panes to windows.  Note this
