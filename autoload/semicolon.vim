@@ -10,6 +10,46 @@
 let s:base_dir = expand('<sfile>:h') . '/../scripts/'
 let g:semicolon_console_visible = 0
 
+func! semicolon#start()
+    if !exists('g:semicolon_breakpoint')
+        let g:semicolon_breakpoint = 'import ipdb; ipdb.set_trace()'
+    endif
+
+    if !exists('g:semicolon_tag')
+       let g:semicolon_tag = '# XXX Breakpoint'
+    endif
+
+    if !exists('g:semicolon_autosave_on_toggle')
+        let g:semicolon_autosave_on_toggle = 1
+    endif
+
+    if !has('unix')
+        return
+    endif
+
+    let g:semicolon_running_tmux = $TMUX != ''
+
+    if g:semicolon_running_tmux
+        call system('tmux rename-window semicolon')
+        call system('tmux setw -u -t semicolon visual-activity')
+        call system('tmux setw -t semicolon remain-on-exit')
+
+        silent !echo -en "\033]2;edit\\007"
+        redraw!
+    endif    
+
+    " TODO: Check for .git as default too ?
+    " if there is no project then just use the current directory
+    if $VIRTUAL_ENV != ''
+        if $VIRTUALENVWRAPPER_PROJECT_FILENAME != ''
+            let fname = $VIRTUAL_ENV .
+                        \ '/' . $VIRTUALENVWRAPPER_PROJECT_FILENAME
+            let g:semicolon_project_dir = system('cat ' . fname)[0:-2]
+        endif
+    endif
+endfunc
+
+
 " toggle a breakpoint within a .py file
 func! semicolon#toggle_breakpoint()
     echo ''
@@ -243,42 +283,6 @@ endfunc
 func! semicolon#run_test_prompt()
     let test = input('test name: ', '', 'file')
     call semicolon#run_test(test)
-endfunc
-
-
-func! semicolon#start()
-    if !exists('g:semicolon_breakpoint')
-        let g:semicolon_breakpoint = 'import ipdb; ipdb.set_trace()'
-    endif
-
-    if !exists('g:semicolon_tag')
-       let g:semicolon_tag = '# XXX Breakpoint'
-    endif
-
-    if !exists('g:semicolon_autosave_on_toggle')
-        let g:semicolon_autosave_on_toggle = 1
-    endif
-
-    let g:semicolon_running_tmux = $TMUX != ''
-
-    if g:semicolon_running_tmux
-        call system('tmux rename-window semicolon')
-        call system('tmux setw -u -t semicolon visual-activity')
-        call system('tmux setw -t semicolon remain-on-exit')
-
-        silent !echo -en "\033]2;edit\\007"
-        redraw!
-    endif    
-
-    " TODO: Check for .git as default too ?
-    " if there is no project then just use the current directory
-    if $VIRTUAL_ENV != ''
-        if $VIRTUALENVWRAPPER_PROJECT_FILENAME != ''
-            let fname = $VIRTUAL_ENV .
-                        \ '/' . $VIRTUALENVWRAPPER_PROJECT_FILENAME
-            let g:semicolon_project_dir = system('cat ' . fname)[0:-2]
-        endif
-    endif
 endfunc
 
 

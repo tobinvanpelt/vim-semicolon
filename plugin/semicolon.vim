@@ -13,6 +13,7 @@ nnoremap ;b :SemicolonToggleBreakpointsList<cr>
 command! SemicolonClearBreakpoints call semicolon#clear_breakpoints()
 command! SemicolonToggleBreakpointsList call semicolon#toggle_breakpoints_list()
 
+
 " used to track the quickfix window
 augroup qfixtoggle
     autocmd!
@@ -33,6 +34,7 @@ nnoremap <silent> ;ii :SemicolonRestartIPython<cr>
            
 nnoremap ;T :SemicolonRunAllTests<cr>
 nnoremap ;R :call semicolon#run_prompt()<cr>
+
 
 " Commands
 command! SemicolonToggleConsole call semicolon#toggle_console()
