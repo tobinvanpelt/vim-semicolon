@@ -67,6 +67,25 @@ func! semicolon#toggle_breakpoint()
 endfunc
 
 
+func! s:find_breakpoints()
+    if exists('g:semicolon_project_dir')
+        let tdir = g:semicolon_project_dir . '/**/*.py'
+    else
+        let tdir = '*.py'
+    end
+
+    execute 'noautocmd silent! vimgrep /' . g:semicolon_tag . '/j ' . tdir
+
+    let num = len(getqflist())
+    if num == 0
+        redraw
+        echo 'No breakpoints.'
+    endif
+
+    return num
+endfunc
+
+
 " toggle open closed the break points in the quick fix window
 func! semicolon#toggle_breakpoints_list()
     if exists('g:semicolon_qfix_win')
@@ -499,24 +518,6 @@ func! s:select_ipython()
     call system('tmux select-pane -t ' . g:semicolon_ipython_pane_id)
 endfunc
 
-
-func! s:find_breakpoints()
-    if exists('g:semicolon_project_dir')
-        let tdir = g:semicolon_project_dir . '/**/*.py'
-    else
-        let tdir = '*.py'
-    end
-
-    execute 'noautocmd silent! vimgrep /' . g:semicolon_tag . '/j ' . tdir
-
-    let num = len(getqflist())
-    if num == 0
-        redraw
-        echo 'No breakpoints.'
-    endif
-
-    return num
-endfunc
 
 
 func! s:parse(...)
