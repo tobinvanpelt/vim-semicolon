@@ -37,16 +37,23 @@ func! semicolon#start()
         silent !echo -en "\033]2;edit\\007"
         redraw!
     endif    
-
+    
     " TODO: Check for .git as default too ?
     " if there is no project then just use the current directory
     if $VIRTUAL_ENV != ''
         if $VIRTUALENVWRAPPER_PROJECT_FILENAME != ''
             let fname = $VIRTUAL_ENV .
                         \ '/' . $VIRTUALENVWRAPPER_PROJECT_FILENAME
-            let g:semicolon_project_dir = system('cat ' . fname)[0:-2]
+            "let g:semicolon_project_dir = system('cat ' . fname)[0:-2]
+            call semicolon#set_project( system('cat ' . fname)[0:-2] )
         endif
     endif
+endfunc
+
+
+" sets the project
+func! semicolon#set_project(pdir)
+    let g:semicolon_project_dir = a:pdir
 endfunc
 
 
@@ -70,11 +77,11 @@ endfunc
 func! s:find_breakpoints()
     if exists('g:semicolon_project_dir')
         let tdir = g:semicolon_project_dir . '/**/*.py'
+        execute 'noautocmd silent! vimgrep /' . g:semicolon_tag . '/j ' . tdir
     else
-        let tdir = '*.py'
+        return 0
     end
 
-    execute 'noautocmd silent! vimgrep /' . g:semicolon_tag . '/j ' . tdir
 
     let num = len(getqflist())
     if num == 0

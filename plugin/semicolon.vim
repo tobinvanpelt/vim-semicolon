@@ -13,6 +13,7 @@ nnoremap ;b :SemicolonToggleBreakpointsList<cr>
 command! SemicolonClearBreakpoints call semicolon#clear_breakpoints()
 command! SemicolonToggleBreakpointsList call semicolon#toggle_breakpoints_list()
 
+command! -nargs=1 -complete=file SemicolonProject call semicolon#set_project(<f-args>)
 
 " used to track the quickfix window
 augroup qfixtoggle
