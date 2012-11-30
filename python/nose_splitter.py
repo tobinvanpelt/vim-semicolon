@@ -1,4 +1,4 @@
-""""
+"""
 vim-semicolon
 
 https://github.com/tobinvanpelt/vim-semicolon.git
@@ -71,25 +71,38 @@ class ResultsSplitter(Plugin):
 
     def addError(self, test, err):
         self.error += 1
-        info = test.address()
-        self._write_color(info[1] + ':' + info[2], 'red')
-        self._write_color(' ERROR', 'red')
+        info = map(lambda x: x if x is not None else '', test.address())
+
+        self._write_color(info[1] + ':' + info[2])
+        self._write_color(' error', 'red')
         self._clear_line()
-        self._stderr('error', err)
+        fname, lineno, msg = self._stderr(err, 'fail')
+
+        self._write_color('   %s:%s' % (fname, lineno), 'yellow')
+        self._write_color('   [ %s ]' % msg, 'cyan')
+        self._clear_line()
+        self._write_traceback(err, info[1], str(lineno))
+        self._clear_line()
 
     def addFailure(self, test, err):
         self.failure += 1
-        info = test.address()
+        info = map(lambda x: x if x is not None else '', test.address())
+
         self._write_color(info[1] + ':' + info[2])
-        self._write_color(' fail', 'red')
+        self._write_color(' failed', 'red')
         self._clear_line()
-        self._stderr('fail', err)
+        fname, lineno, msg = self._stderr(err, 'fail')
+
+        self._write_color('   %s:%s' % (fname, lineno), 'yellow')
+        self._write_color('   %s' % msg, 'cyan')
+        self._clear_line()
+        self._clear_line()
 
     def addSuccess(self, test):
         self.success += 1
         info = test.address()
         self._write_color(info[1] + ':' + info[2])
-        self._write_color(' pass', 'green')
+        self._write_color(' passed', 'green')
         self._clear_line()
 
     def begin(self):
@@ -99,7 +112,7 @@ class ResultsSplitter(Plugin):
         time_exp = time.clock() - self.t0
 
         self._clear_line()
-        self._write_color('-' * 70)
+        self._write_color('-' * 79)
         self._clear_line()
 
         num = self.success + self.failure + self.error
@@ -123,7 +136,7 @@ class ResultsSplitter(Plugin):
     def setOutputStream(self, stream):
         self.out_stream = stream
         self.out_stream.writeln('\n\n')
-        self.out_stream.writeln('=' * 70)
+        self.out_stream.writeln('=' * 79)
         return DummyStream()
 
     def _write_color(self, text, color=None):
@@ -175,7 +188,26 @@ class ResultsSplitter(Plugin):
                     break
         return best
 
-    def _stderr(self, etype, err):
+    def _write_traceback(self, err, pkg_module, lineno):
+        exctype, value, tb = err
+
+        lines = traceback.format_exception(*err)
+
+        pkg_mod = pkg_module.replace('.', '/')
+
+        gap = '      '
+        self._write_color(gap)
+        for line in lines:
+            line = line.replace('\n', '\n' + gap)
+
+            if pkg_mod in line and lineno in line:
+                color = 'blue'
+            else:
+                color = 'cyan'
+
+            self._write_color(line, color)
+
+    def _stderr(self, err, etype):
         exctype, value, tb = err
         fulltb = traceback.extract_tb(tb)
         fname, lineno, funname, msg = self._selectBestStackFrame(fulltb)
@@ -194,6 +226,8 @@ class ResultsSplitter(Plugin):
                 self.err_stream.write('%s: %s %s' % (prefix, pad, line))
 
         self.err_stream.write('\n')
+
+        return fname, lineno, msg
 
     def _format_testfname(self, fname):
         if fname.startswith(self.basepath):

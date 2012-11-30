@@ -22,4 +22,5 @@ CompilerSet efm=%f:%l:\ fail:\ %m,%f:%l:\ error:\ %m
 CompilerSet shellpipe=--err-file=%s
 
 let s:nose_splitter = expand('<sfile>:h') . '/../python/nose_splitter.py'
-let &l:makeprg='python ' . s:nose_splitter . ' $* --with-results-splitter'
+let &l:makeprg='clear; python ' . s:nose_splitter .
+            \ ' $* --with-results-splitter --with-doctest --doctest-tests'

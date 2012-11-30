@@ -295,6 +295,7 @@ func! semicolon#run_test(...)
         endif
     endif
     execute cmd
+    cwindow
 endfunc
 
 
