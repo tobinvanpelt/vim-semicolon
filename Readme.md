@@ -106,24 +106,6 @@ The default is:
     import ipdb; ipdb.set_trace()
 
 
-Todos and Future Functionality
-------------------------------
-
-- change name of breakpoint buffer sub window
-- highlight breakpoints in file
-- travel to breakpoint when navigating up down in breakppoint window with
-  preview
-- put the name of the next line to be executed in the breakpoint list
-
-- when running tests comment out all breakpoints
-- when deleting a breakpoint - preserve the yank buffer
-
-- debug just a specific test from the quickfix window
-- allow for project to be defined from within semicolon
-
-- configure to be used with python/ipyton or pdb/ipdb
-
-
 License
 -------
 Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
