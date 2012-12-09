@@ -28,15 +28,16 @@ With respect to integrating pdb with vim, it would be helpful to be able to:
 set_trace() inserts.  This could be accomplished by saving a .pdbrc file in
 each project.  This would require pdb be run from the same location every time.
 
-- the builtin python can import vim to control vim.  This appears only to be
-  valid if run with :py
+- The .pdbrc woould keep the breakpoints.  The MyPdb would update it by
+  overwiting do_break.  In vim :sign place would be set and then the list of
+  the :signs would be used to update .pdbrc and the quickfix window. See
+  setqflist().
 
-- set up a server runing in vim and a client on each run.  See:
+- The :signs will track file edits with hidden marks.
+
+- set up a server runing in vim and a client for each run.  See:
   http://docs.python.org/2/library/multiprocessing.html
   http://nichol.as/zeromq-an-introduction
-
-- line highlighting:
-http://stackoverflow.com/questions/13675019/vim-highlight-lines-using-line-number-on-external-file
 
 - pdb howto:
 http://www.doughellmann.com/PyMOTW/pdb/
