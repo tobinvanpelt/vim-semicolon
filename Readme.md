@@ -38,20 +38,20 @@ Semicolon depends on tmux as well as the following python moduels:
     - ipython
     - ipdb
 
+    - tmux-utils
+    - vim compiled with +clientserver
+
 
 Key Commands
 ------------
-Console:
 
-- `;;`  toggles open/close the console split pane below vim
-- `;i`  open console and select ipython pane
-- `;ii` reset ipython pane and select it
-
+- set the project ???
 
 Breakpoints:
 
-- `;<space>` toggles a breakpoint on/off for the current line in a .py file
-- `;b` toggles a window listing of all breakpoints in the quickfix buffer
+- `;;` toggles a breakpoint on/off for the current line in a .py file
+- `;b` toggles a window listing of all breakpoints in the project 
+- `;x` delete all breakpoints in the current file
 - `;x` delete all breakpoints in the current project
 
 Debugging:
@@ -59,6 +59,12 @@ Debugging:
 - `;r`  runs the current .py file
 - `;rr` prompts for arguments to run the current .py file
 - `;R`  prompts for filename and arguments to run 
+
+
+
+
+edit here ...
+
 - `;d`  debugs the current python test file (uses nosetests)
 
 Testing:
@@ -78,8 +84,32 @@ Additional useful quickfix commands for the breakpoint list or test failures:
 - `:cr` goto the begining of the list
 
     
-Commands
---------
+Installation
+------------
+
+pip install nose
+pip install ipdb
+pip install ipython
+
+git clone tmux-pane
+vim script ???
+
+
+NOTES: 
+
+need +clientserver use vim --version or :version to see
+
+requires xserver to run
+
+to use brew to compile in:
+
+1. Edit formula for vim such that configure sets:
+
+--with-x and --with-features=huge and --enable-gui=no
+
+
+Configuration
+-------------
 
 - `:SemicolonToggleBreakpoint` (at current line)
 - `:SemicolonClearBreakpoints` (within current project scope)
@@ -94,19 +124,26 @@ Commands
 - `:SemicolonToggleConsole`
 
 
-Configuration
--------------
 
-To redefine the breakpoint command use the following in your .vimrc:
+Todos and Future Functionality
+------------------------------
 
-    let g:semicolon_breakpoint=<new breakpoint line>
+- travel to breakpoint when navigating up down in breakppoint window with
+  preview
+- add/remove conditions to a breakpoint 
+- add/remove ignores
+- disable breakpoints
 
-The default is:
 
-    import ipdb; ipdb.set_trace()
+
+- when running tests comment out all breakpoints
+- debug just a specific test from the quickfix window
+
 
 
 License
 -------
 Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
 See :help license.
+
+
