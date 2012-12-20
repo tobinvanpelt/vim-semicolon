@@ -6,8 +6,9 @@
 " See :help license.
 
 
-" toggle bp off with running
-" clear all bp with running
+"
+" toggle bp off with running ipdb
+" clear all bp with running ipdb
 "
 " only allow breakpoints for python filetype
 " clear all breakpoint - cl
@@ -16,8 +17,25 @@
 " leaves the buffer in a different state at end - preserve it somehow to the
 " original file that was present in the window when it started debugging
 "
-"
 " mismatch with file names in .pdbrc
+" 
+" how to connect servername with start of debugger reliably 
+"
+" find current class and function:  http://jeetworks.org/node/147
+"
+" filetype=qf for tests <enter> goto, <space> run debug 
+" filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
+"
+"
+" tests:
+" ;d - for debugging current file
+" ;dd - debug current test
+" ;D - debug specific file with parameters
+"
+"
+" ;t - run current test file
+" ;tt - run current test
+" ;T - run all tests 
 
 
 
@@ -481,8 +499,8 @@ func! semicolon#run(...)
     let vimpdb = s:python_path . '/vimpdb.py'
     let target = v:servername
     
-    let cmd = 'python ' . vimpdb . ' ' . target . ' ' . fname .
-                \ ' ' . join(args, ' ') 
+    let cmd = 'cd ' . s:project_dir . '; python ' . vimpdb . ' ' . target .
+                \ ' ' . fname . ' ' . join(args, ' ') 
 
     if s:running
         call system('tmux respawn-pane -k -t ' . s:ipdb_pane . ' "' . cmd . '"')

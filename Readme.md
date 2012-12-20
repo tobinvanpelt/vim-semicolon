@@ -1,33 +1,31 @@
 Semicolon
 =========
 
-Semicolon is a pytyhon IDE for vim that utilizes shell based workflow (zsh
-recommended) that is manged with tmux. It incorporates an ipython console,
-testing using nose, and the debugging of both regular scripts
-and test modules.
+Semicolon creates a python debugging (ipdb) and testing (nose) environment
+using tmux.  
+
+Within a python file breakpoints can be toggled on/off with `;;`)and a
+breakpoint list can be toggled with (`;b`).  To run a file under the ipdb
+debugger use `;r` which opens a pane containing an ipdb terminal.  All
+breakpoitns are stored in a `.pdbrc` file in the project directory so that
+breakpoitns can be saved between vim sessions. Note that breakpoints can also
+be set and removed from within the ipdb terminal and they are updated
+accordingly in vim. 
+
+Debug ...
+
+Run tests ...
+
 
 To utilize semicolon vim must be run from within a tmux seesion:
 
     $tmux new vim
 
-The IDE consists of vim as the 'edit' pane, a 'debug' pane where the ipdb
-debugger executes, and a 'ipython' pane.  Tmux is used to organize these
-various panes.  Most of the time only the 'edit' pane is visible, but the
-console can toggle open/close using `;;`.  When the console is not visible
-beneath the 'edit' pane, the console panes are in their own 'console' window
-that can be navigated to with typical tmux commands. This seperate console
-window has an additional shell pane as well for conveince.
+Furthermore, since the debugger utilizes vim's +clientserver functionalty (see
+Installation below), vim must be started with --servername.  
 
-Breakpoints for debugging are directly entered into python .py files with the
-convenience of `;<space>` (see below). Furthermore, you may list or delete all
-breakpoints within the project.  The project is defined by the project that was
-in effect (using virtualenvwrapper) at the time vim was started. Otherwise the
-project defaults to only the current directory and does not incorporate
-additional subdirectories.
-
-Note: tmux by default (conveniently for this plugin) binds ';' to 'last-pane' -
-this a convenient binding to remember to switch to the console pane and then
-back to vim quickly.
+Note: tmux by default binds ';' to 'last-pane' - this a convenient binding to
+remember to switch to the debugger pane and then back to vim quickly.
 
 
 Dependencies
@@ -37,6 +35,7 @@ Semicolon depends on tmux as well as the following python moduels:
     - nose
     - ipython
     - ipdb
+    - ipdbplugin
 
     - tmux-utils
     - vim compiled with +clientserver
@@ -45,33 +44,38 @@ Semicolon depends on tmux as well as the following python moduels:
 Key Commands
 ------------
 
-- set the project ???
+Project:
+
+- `:SemicolonProject` returns the current project directory
+- `:SemicolonProject <project_dir>` sets the current project directory
+
 
 Breakpoints:
 
-- `;;` toggles a breakpoint on/off for the current line in a .py file
-- `;b` toggles a window listing of all breakpoints in the project 
-- `;x` delete all breakpoints in the current file
-- `;x` delete all breakpoints in the current project
+- `;;`  toggles a breakpoint on/off for the current line in a .py file
+- `;b`  toggles a window listing of all breakpoints in the project 
+- `;x`  delete all breakpoints in the current file
+- `;X` delete all breakpoints in the current project
+
 
 Debugging:
 
-- `;r`  runs the current .py file
-- `;rr` prompts for arguments to run the current .py file
-- `;R`  prompts for filename and arguments to run 
+- `;r`  runs the current .py file within ipdb
+- `;rr` prompts for arguments to run the current .py file with ipdb
+- `;R`  prompts for filename and arguments 
 
+- `;d`  debugs the current python test file (using nosetests --ipdb)
+- `;dd` debugs the current python test under cursor (uses nosetests --ipdb)
+- `;D`  debugs a specifc test using a prompt (filename:testname)
 
+- `;q`  quits the debugger
 
-
-edit here ...
-
-- `;d`  debugs the current python test file (uses nosetests)
 
 Testing:
 
 - `;T`  runs all project tests
-- `;t`  runs the curretn python test file
-- `;tt` prompts for nosetests to run in current test file
+- `;t`  runs the curret python test file
+- `;tt` runs current test under cursor
 
 
 Additional useful quickfix commands for the breakpoint list or test failures:
@@ -93,6 +97,7 @@ pip install ipython
 
 git clone tmux-pane
 vim script ???
+ipdbplugin
 
 
 NOTES: 

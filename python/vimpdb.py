@@ -9,7 +9,7 @@ import sys
 import os
 import traceback
 
-from ipdb.__main__ import def_colors, Pdb
+from ipdb.__main__ import def_colors, Pdb, Restart
 
 
 vim_server = None
@@ -87,7 +87,7 @@ def main():
                 break
             print "The program finished and will be restarted.\n"
 
-        except vimpdb.Restart:
+        except Restart:
             print "Restarting", mainpyfile, "with arguments:"
             print "\t" + " ".join(sys.argv[2:])
 
