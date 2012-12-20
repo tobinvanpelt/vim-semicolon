@@ -13,12 +13,8 @@
 " only allow breakpoints for python filetype
 " clear all breakpoint - cl
 " clear breaks by number
-
-" leaves the buffer in a different state at end - preserve it somehow to the
-" original file that was present in the window when it started debugging
-"
-" mismatch with file names in .pdbrc
 " 
+"
 " how to connect servername with start of debugger reliably 
 "
 " find current class and function:  http://jeetworks.org/node/147
@@ -155,6 +151,7 @@ func! semicolon#end_debug()
     call s:clear_current_line()
     set cursorline
     let s:running = 0
+    execute 'drop ' . s:current_file
 
     return ''
 endfunc
@@ -251,7 +248,7 @@ func! semicolon#set_vim_bp(filename, line_num)
     endif
 
     silent! execute 'sign place ' . s:next_id . ' line=' . a:line_num .
-        \' name=breakpoint file=' . a:filename
+        \' name=breakpoint file=' . bufname(a:filename)
 
     let s:next_id = s:next_id + 1
 
@@ -305,7 +302,7 @@ func! s:update_pdbrc()
     " initialize to all open windows that potentially could have changes
     let cur_win = winnr()
     let files = []
-    windo call add(files, @%)   
+    windo call add(files, expand('%:p'))
     execute cur_win . 'wincmd w'
 
     let changes = {}
@@ -321,7 +318,7 @@ func! s:update_pdbrc()
     for line in sign_list
         " update current file being handled 
         if matchend(line, 'Signs for ') != -1
-            let filename = line[10:-2] 
+            let filename = getcwd() . '/' .line[10:-2] 
             let changes[filename] = []
             continue
         endif
@@ -355,6 +352,7 @@ func! s:update_pdbrc()
         " write additions
         for linenum in changes[filename]
             let new_line = 'break ' .  filename . ':' . linenum
+            echo new_line
             call add(pdbrc, new_line)
         endfor
     endfor
@@ -510,6 +508,8 @@ func! semicolon#run(...)
         let s:ipdb_pane = matchstr(system('tmux-pane'),'%\d*')
         let s:running = 1
     endif
+
+    let s:current_file = expand('%:p')
 endfunc
 
 
