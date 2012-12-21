@@ -1,28 +1,13 @@
 " vim-semicolon
 " 
-" https://github.com/tobinvanpelt/vim-semicolon.git
+" github.com/tobinvanpelt/vim-semicolon.git
 "
 " Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
 " See :help license.
 
 
-"
-" toggle bp off with running ipdb
-" clear all bp with running ipdb
-"
 " only allow breakpoints for python filetype
-" clear all breakpoint - cl
-" clear breaks by number
 " 
-"
-" how to connect servername with start of debugger reliably 
-"
-" find current class and function:  http://jeetworks.org/node/147
-"
-" filetype=qf for tests <enter> goto, <space> run debug 
-" filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
-"
-"
 " tests:
 " ;d - for debugging current file
 " ;dd - debug current test
@@ -32,6 +17,15 @@
 " ;t - run current test file
 " ;tt - run current test
 " ;T - run all tests 
+"
+"
+" how to connect servername with start of debugger reliably 
+"
+" find current class and function:  http://jeetworks.org/node/147
+"
+" filetype=qf for tests <enter> goto, <space> run debug 
+" filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
+"
 
 
 
@@ -99,7 +93,7 @@ func! semicolon#toggle_breakpoint()
     if id == 0
         call s:set_bp(filename, line_num)
     else
-        call s:remove_bp(filename, id)
+        call s:remove_bp(filename, line_num)
     endif
 endfunc
 
@@ -128,6 +122,11 @@ func! semicolon#delete_all_breakpoints()
     let k = 0
     for line in pdbrc
         if match(line, 'break \.*') != -1
+            if s:running
+                let cmd = 'cl ' . matchstr(line, '.*:\d*')[6:]
+                call s:send_ipdb(cmd)
+            endif
+
             call remove(pdbrc, k)
         else
             let k = k + 1
@@ -141,6 +140,20 @@ endfunc
 
 " -----------------------------------------------------------------------------
 func! semicolon#delete_file_breakpoints()
+    if s:running
+        let pdbrc = s:load_pdbrc()
+
+        for line in pdbrc
+            if match(line, 'break \.*') != -1
+                if match(line, expand('%:s')) != -1
+                    let cmd = 'cl ' . matchstr(line, '.*:\d*')[6:]
+                    echom cmd
+                    call s:send_ipdb(cmd)
+                endif
+            endif
+        endfor
+    endif
+
     call s:delete_signs(bufname('%'))
     call s:update()
 endfunc
@@ -159,6 +172,10 @@ endfunc
 
 " -----------------------------------------------------------------------------
 func! semicolon#set_current_line(filename, line_num)
+    if !filereadable(a:filename)
+        return ''
+    endif
+
     call s:clear_current_line()
 
     " prep file
@@ -223,20 +240,20 @@ endfunc
 
 " -----------------------------------------------------------------------------
 func! s:set_bp(filename, line_num)
-    call semicolon#set_vim_bp(a:filename, a:line_num)
-
     if s:running
         call s:set_ipdb_bp(a:filename, a:line_num)
+    else
+        call semicolon#set_vim_bp(a:filename, a:line_num)
     endif
 endfunc
 
 
 " -----------------------------------------------------------------------------
 func! s:remove_bp(filename, line_num)
-    call semicolon#remove_vim_bp(a:filename, a:line_num)
-
     if s:running
         call s:remove_ipdb_bp(a:filename, a:line_num)
+    else
+        call semicolon#remove_vim_bp(a:filename, a:line_num)
     endif
 endfunc
 
@@ -259,8 +276,10 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
-func! semicolon#remove_vim_bp(filename, id)
-    silent! execute 'sign unplace ' . a:id . ' file=' . a:filename
+func! semicolon#remove_vim_bp(filename, line_num)
+    let id = s:get_id_at_line(a:line_num)
+    
+    silent! execute 'sign unplace ' . id . ' file=' . a:filename
 
     call s:update()
 
@@ -277,13 +296,15 @@ endfunc
 
 " -----------------------------------------------------------------------------
 func! s:set_ipdb_bp(filename, line_num)
-    call s:send_ipdb('break ' . a:filename . ':' . a:line_num)
+    let filename = fnamemodify(a:filename, ':p')
+    call s:send_ipdb('break ' . filename . ':' . a:line_num)
 endfunc
 
 
 " -----------------------------------------------------------------------------
 func! s:remove_ipdb_bp(filename, line_num)
-    call s:send_ipdb('clear ' . a:filename . ':' . a:line_num)
+    let filename = fnamemodify(a:filename, ':p')
+    call s:send_ipdb('clear ' . filename . ':' . a:line_num)
 endfunc
 
 
@@ -318,7 +339,7 @@ func! s:update_pdbrc()
     for line in sign_list
         " update current file being handled 
         if matchend(line, 'Signs for ') != -1
-            let filename = getcwd() . '/' .line[10:-2] 
+            let filename = fnamemodify(line[10:-2], ':p') 
             let changes[filename] = []
             continue
         endif
@@ -352,7 +373,6 @@ func! s:update_pdbrc()
         " write additions
         for linenum in changes[filename]
             let new_line = 'break ' .  filename . ':' . linenum
-            echo new_line
             call add(pdbrc, new_line)
         endfor
     endfor
@@ -814,4 +834,6 @@ func! s:update_pdbrc_qf()
     else
         call setqflist([])
     endif 
+
+    redraw!
 endfunc

@@ -1,5 +1,6 @@
 """
 A wrapper to ipdb.  Commands are sent between vim and ipdb via tmux.
+
 """
 
 # Copyright (c) 2012 i3D Technologies, Inc. All rights reserved.
@@ -9,6 +10,7 @@ import sys
 import os
 import traceback
 
+from bdb import Breakpoint
 from ipdb.__main__ import def_colors, Pdb, Restart
 
 
@@ -20,6 +22,8 @@ class VimPdb(Pdb):
         lineno = self.curframe.f_lineno
         filename = self.curframe.f_code.co_filename
 
+        print filename, lineno
+
         cmd = "semicolon#set_current_line('%s', %s)" % (filename, lineno)
         send_vim(cmd)
 
@@ -27,35 +31,79 @@ class VimPdb(Pdb):
         args = line.split(' ')
 
         if args[0] == 'b' or args[0] == 'break':
-            if len(args) > 1:
-                fname = None
-                lineno = None
-                error = False
+            self._process_break(args)
 
+        elif args[0] == 'cl' or args[0] == 'clear':
+            self._process_clear(args)
+
+        return line
+
+    def _process_break(self, args):
+        if len(args) == 2:
+            # set a bp
+            fname = None
+            lineno = None
+
+            args2 = args[1].split(':')
+            if len(args2) == 1:
+                fname = self.curframe.f_code.co_filename
+                lineno = args2[0]
+
+            elif len(args2) == 2:
+                if os.path.exists(args2[0]):
+                    fname = args2[0]
+                    lineno = args2[1]
+
+            try:
+                line_num = int(lineno)
+
+            except ValueError:
+                return
+
+            cmd = "semicolon#set_vim_bp('%s', %s)" % (fname, line_num)
+            send_vim(cmd)
+
+    def _process_clear(self, args):
+        if len(args) == 1:
+            # clear all bps
+            print 'Only breakpoints locally will be cleared.'
+            print 'No vim breakpoints will be effected.'
+
+        else:
+            if ':' in args[1]:
+                # clear a single bp
                 args2 = args[1].split(':')
-                if len(args2) == 1:
-                    fname = self.curframe.f_code.co_filename
-                    lineno = args2[0]
-
-                elif len(args2) == 2:
+                if len(args2) == 2:
                     if os.path.exists(args2[0]):
                         fname = args2[0]
                         lineno = args2[1]
 
-                try:
-                    line_num = int(lineno)
+                        try:
+                            line_num = int(lineno)
 
-                except ValueError:
-                    error = True
+                        except ValueError:
+                            return
 
-                if not error:
-                    cmd = "semicolon#set_vim_bp('%s', %s)" % (fname, line_num)
+                        cmd = "semicolon#remove_vim_bp('%s', %s)" \
+                                % (fname, line_num)
+                        send_vim(cmd)
+
+            else:
+                # clear by number
+                for a in args[1:]:
+                    try:
+                        _id = int(a)
+                        bp = Breakpoint.bpbynumber[_id]
+
+                    except (ValueError, IndexError):
+                        continue
+
+                    fname = bp.file
+                    line_num = bp.line
+
+                    cmd = "semicolon#remove_vim_bp('%s', %s)" \
+                            % (fname, line_num)
                     send_vim(cmd)
-
-        elif args[0] == 'cl' or args[0] == 'clear':
-            pass
-
-        return line
 
 
 def send_vim(cmd):
