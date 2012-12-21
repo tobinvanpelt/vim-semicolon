@@ -1,4 +1,4 @@
-" vim-semicolon
+" vim-semicolon autoload file
 " 
 " github.com/tobinvanpelt/vim-semicolon.git
 "
@@ -6,8 +6,6 @@
 " See :help license.
 
 
-" only allow breakpoints for python filetype
-" 
 " tests:
 " ;d - for debugging current file
 " ;dd - debug current test
@@ -27,25 +25,33 @@
 " filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
 "
 
+highlight Breakpoint cterm=bold ctermfg=DarkRed ctermbg=None
+highlight CurrentDebug cterm=bold ctermfg=23 ctermbg=23
+highlight CurrentDebugLine cterm=bold ctermfg=None ctermbg=23
+
+sign define breakpoint text=* texthl=Breakpoint
+sign define currentline text=>> linehl=CurrentDebugLine texthl=CurrentDebug
+
+set efm=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
 
 
+" initialize variables
 let s:python_path = expand('<sfile>:h') . '/../python'
+let s:running = 0
+let s:current_line_id = 1
+let s:next_id = 2
+let s:breakpoint_list = 0
+
+
 
 " -----------------------------------------------------------------------------
+" Publicly accessible functions
+" -----------------------------------------------------------------------------
+
+" -----------------------------------------------------------------------------
+" Used by plugin on startup
+"
 func! semicolon#init()
-    highlight Breakpoint cterm=bold ctermfg=red ctermbg=None
-
-    sign define breakpoint text=* texthl=Breakpoint
-    sign define currentline text=-> linehl=Visual texthl=Visual
-
-    set efm=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
-
-    let s:running = 0
-    let s:current_line_id = 1
-    let s:next_id = 2
-    let s:breakpoint_list = 0
-
-
     " Set project based on virtualenv project
     if $VIRTUAL_ENV != '' && $VIRTUALENVWRAPPER_PROJECT_FILENAME != ''
         let fname = $VIRTUAL_ENV .
@@ -147,7 +153,6 @@ func! semicolon#delete_file_breakpoints()
             if match(line, 'break \.*') != -1
                 if match(line, expand('%:s')) != -1
                     let cmd = 'cl ' . matchstr(line, '.*:\d*')[6:]
-                    echom cmd
                     call s:send_ipdb(cmd)
                 endif
             endif
@@ -160,10 +165,67 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
+" run current file if no .py is given.
+"
+func! semicolon#run(...)
+    let res = call('s:parse', a:000)
+    if len(res) == 0
+        return
+    endif
+
+    let fname = res[0]
+    let args = res[1]
+
+    windo update
+    
+    let vimpdb = s:python_path . '/vimpdb.py'
+    let target = v:servername
+    
+    let cmd = 'cd ' . s:project_dir . '; python ' . vimpdb . ' ' . target .
+                \ ' ' . fname . ' ' . join(args, ' ') 
+
+    if s:running
+        call system('tmux respawn-pane -k -t ' . s:ipdb_pane . ' "' . cmd . '"')
+        call system('tmux select-pane -t ' . s:ipdb_pane)
+    else
+        call system('tmux split-window -p 25 "' . cmd . '"')
+        let s:ipdb_pane = matchstr(system('tmux-pane'),'%\d*')
+        let s:running = 1
+    endif
+
+    let s:current_file = expand('%:p')
+endfunc
+
+
+" -----------------------------------------------------------------------------
+" prompt for arguments to run
+"
+func! semicolon#run_args_prompt()
+    let fname = expand('%') 
+    let args = input('ipdb ' . fname . ' ', '', 'file')
+    call call('semicolon#run', insert(split(args, '\ '), fname))
+endfunc
+
+
+" -----------------------------------------------------------------------------
+" prompt for filename and arguments to run
+"
+func! semicolon#run_prompt()
+    let args = input('ipdb ', '', 'file')
+    call call('semicolon#run', split(args, '\ '))
+endfunc
+
+
+" -----------------------------------------------------------------------------
+" Public method only used from ipdb while it is running
+" -----------------------------------------------------------------------------
+
+" -----------------------------------------------------------------------------
 func! semicolon#end_debug()
     call s:clear_current_line()
     set cursorline
     let s:running = 0
+
     execute 'drop ' . s:current_file
 
     return ''
@@ -198,6 +260,40 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
+func! semicolon#set_vim_bp(filename, line_num)
+    if empty(getline(a:line_num))
+        return ''
+    endif
+
+    silent! execute 'sign place ' . s:next_id . ' line=' . a:line_num .
+        \' name=breakpoint file=' . bufname(a:filename)
+
+    let s:next_id = s:next_id + 1
+
+    call s:update()
+
+    return ''
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! semicolon#remove_vim_bp(filename, line_num)
+    let id = s:get_id_at_line(a:line_num)
+    
+    silent! execute 'sign unplace ' . id . ' file=' . a:filename
+
+    call s:update()
+
+    return ''
+endfun
+
+
+
+" -----------------------------------------------------------------------------
+" Private functions
+" -----------------------------------------------------------------------------
+
+" -----------------------------------------------------------------------------
 func! s:clear_current_line()
    execute 'sign unplace' s:current_line_id
 endfunc
@@ -220,6 +316,8 @@ func! s:delete_signs(...)
     endwhile
 
 endfunc
+
+
 " -----------------------------------------------------------------------------
 func! s:init_signs()
     let pdbrc = s:load_pdbrc()
@@ -256,35 +354,6 @@ func! s:remove_bp(filename, line_num)
         call semicolon#remove_vim_bp(a:filename, a:line_num)
     endif
 endfunc
-
-
-" -----------------------------------------------------------------------------
-func! semicolon#set_vim_bp(filename, line_num)
-    if empty(getline(a:line_num))
-        return ''
-    endif
-
-    silent! execute 'sign place ' . s:next_id . ' line=' . a:line_num .
-        \' name=breakpoint file=' . bufname(a:filename)
-
-    let s:next_id = s:next_id + 1
-
-    call s:update()
-
-    return ''
-endfunc
-
-
-" -----------------------------------------------------------------------------
-func! semicolon#remove_vim_bp(filename, line_num)
-    let id = s:get_id_at_line(a:line_num)
-    
-    silent! execute 'sign unplace ' . id . ' file=' . a:filename
-
-    call s:update()
-
-    return ''
-endfun
 
 
 " -----------------------------------------------------------------------------
@@ -419,6 +488,67 @@ func! s:get_cmd_output(cmd)
 endfun
 
 
+" -----------------------------------------------------------------------------
+func! s:parse(...)
+    if a:0 > 0
+        if match(a:1, '.py') != -1
+            return [expand(a:1), a:000[1:]]
+        endif
+    endif
+
+    if &filetype != 'python'
+        echo 'Filetype must be .py'
+        return []
+    endif
+
+    return [expand('%:p'), a:000]
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:exit()
+    call semicolon#quit_debugger()
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:load_pdbrc()
+    let fname = s:project_dir . '/.pdbrc'
+    if filereadable(fname)
+        return readfile(fname)
+    else
+        return []
+    endif
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:save_pdbrc(pdbrc)
+    let fname = s:project_dir . '/.pdbrc'
+    if !empty(a:pdbrc)
+        call writefile(a:pdbrc, fname)
+    else
+        call system('rm ' . fname)
+    endif
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:update_pdbrc_qf()
+    let fname = s:project_dir . '/.pdbrc'
+    if filereadable(fname)
+        execute 'cgetfile ' . fname
+    else
+        call setqflist([])
+    endif 
+
+    redraw!
+endfunc
+
+
+
+
+
 
 "------------------------------------------------------------------------------
 "func! semicolon#toggle_console()
@@ -500,52 +630,13 @@ endfun
 "endfunc
 
 
+
+
+
+
+
+
 "------------------------------------------------------------------------------
-
-" run current file if no .py is given.
-func! semicolon#run(...)
-    let res = call('s:parse', a:000)
-    if len(res) == 0
-        return
-    endif
-
-    let fname = res[0]
-    let args = res[1]
-
-    windo update
-    
-    let vimpdb = s:python_path . '/vimpdb.py'
-    let target = v:servername
-    
-    let cmd = 'cd ' . s:project_dir . '; python ' . vimpdb . ' ' . target .
-                \ ' ' . fname . ' ' . join(args, ' ') 
-
-    if s:running
-        call system('tmux respawn-pane -k -t ' . s:ipdb_pane . ' "' . cmd . '"')
-        call system('tmux select-pane -t ' . s:ipdb_pane)
-    else
-        call system('tmux split-window -p 25 "' . cmd . '"')
-        let s:ipdb_pane = matchstr(system('tmux-pane'),'%\d*')
-        let s:running = 1
-    endif
-
-    let s:current_file = expand('%:p')
-endfunc
-
-
-" prompt for arguments to run
-func! semicolon#run_args_prompt()
-    let fname = expand('%') 
-    let args = input('ipdb ' . fname . ' ', '', 'file')
-    call call('semicolon#run', insert(split(args, '\ '), fname))
-endfunc
-
-
-" prompt for filename and arguments to run
-func! semicolon#run_prompt()
-    let args = input('ipdb ', '', 'file')
-    call call('semicolon#run', split(args, '\ '))
-endfunc
 
 
 "" debug the current test file if no arguments are given
@@ -611,17 +702,6 @@ endfunc
 "    call system('tmux rename-window ' . shell_name)
 "    silent !echo -en "\033]2;$HOSTNAME\\007"
 "endfunc
-
-
-"------------------------------------------------------------------------------
-func! s:check_tmux()
-    if s:tmux_running
-        echo "Semicolon must be run within a tmux session.
-            \ (Use 'tmux new vim' to start one.)"
-    endif
-
-    return s:tmux_running
-endfunc
 
 
 "func! s:init_console()
@@ -786,54 +866,3 @@ endfunc
 "endfunc
 
 
-func! s:parse(...)
-    if a:0 > 0
-        if match(a:1, '.py') != -1
-            return [expand(a:1), a:000[1:]]
-        endif
-    endif
-
-    if &filetype != 'python'
-        echo 'Filetype must be .py'
-        return []
-    endif
-
-    return [expand('%:p'), a:000]
-endfunc
-
-
-func! s:exit()
-    call semicolon#quit_debugger()
-endfunc
-
-
-func! s:load_pdbrc()
-    let fname = s:project_dir . '/.pdbrc'
-    if filereadable(fname)
-        return readfile(fname)
-    else
-        return []
-    endif
-endfunc
-
-
-func! s:save_pdbrc(pdbrc)
-    let fname = s:project_dir . '/.pdbrc'
-    if !empty(a:pdbrc)
-        call writefile(a:pdbrc, fname)
-    else
-        call system('rm ' . fname)
-    endif
-endfunc
-
-
-func! s:update_pdbrc_qf()
-    let fname = s:project_dir . '/.pdbrc'
-    if filereadable(fname)
-        execute 'cgetfile ' . fname
-    else
-        call setqflist([])
-    endif 
-
-    redraw!
-endfunc

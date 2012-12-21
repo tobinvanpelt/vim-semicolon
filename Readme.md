@@ -2,43 +2,80 @@ Semicolon
 =========
 
 Semicolon creates a python debugging (ipdb) and testing (nose) environment
-using tmux.  
+using tmux and terminal vim.  This creates a lightweight version of some IDE
+functionality.
 
-Within a python file breakpoints can be toggled on/off with `;;`)and a
-breakpoint list can be toggled with (`;b`).  To run a file under the ipdb
-debugger use `;r` which opens a pane containing an ipdb terminal.  All
-breakpoitns are stored in a `.pdbrc` file in the project directory so that
-breakpoitns can be saved between vim sessions. Note that breakpoints can also
+Vim must be run within a tmux session and with +clientserver support and given
+a servername (see Installation and Configuration below). Note that tmux by
+default binds ';' to 'last-pane' - this a convenient binding to remember to
+switch to the debugger pane and then back to vim quickly.
+
+
+Debugging
+---------
+
+The debugger works by opening a standard ipdb terminal as a tmux pane directly
+below the vim pane.  This allows for the ipdb debuger to be able to interact
+with vim files and eases setting breakpoints and viewing code around the
+currently executed line.
+
+Breakpoints can be toggled on/off with `;;` and the breakpoint list can be
+toggled on/off using `;b`.  To run a file under the ipdb debugger use `;r`
+which opens a pane containing an ipdb terminal. See [pdb
+manual](http://docs.python.org/2/library/pdb.html) for a list of commands.
+
+Breakpoitns are stored in a `.pdbrc` file in the project directory so that
+breakpoitns can persists between vim sessions. Note that breakpoints can also
 be set and removed from within the ipdb terminal and they are updated
 accordingly in vim. 
 
-Debug ...
 
-Run tests ...
-
-
-To utilize semicolon vim must be run from within a tmux seesion:
-
-    $tmux new vim
-
-Furthermore, since the debugger utilizes vim's +clientserver functionalty (see
-Installation below), vim must be started with --servername.  
-
-Note: tmux by default binds ';' to 'last-pane' - this a convenient binding to
-remember to switch to the debugger pane and then back to vim quickly.
+Testing
+-------
 
 
-Dependencies
-------------
-Semicolon depends on tmux as well as the following python moduels: 
+
+
+
+
+
+Dependencies and Requirements
+-----------------------------
+
+Semicolon requires +clientserver support within terminal vim running within a
+tmux session.  In addition the following dependenceis exist: 
     
-    - nose
-    - ipython
-    - ipdb
-    - ipdbplugin
+    - [ipdb]
+    - [nose]
+    - [ipdbplugin]
+    - [tmux-utils]
 
-    - tmux-utils
-    - vim compiled with +clientserver
+... give pip and build steps here 
+
+
+Installation
+------------
+
+pip install nose
+pip install ipdb
+pip install ipython
+
+git clone tmux-pane
+vim script ???
+ipdbplugin
+
+
+NOTES: 
+
+need +clientserver use vim --version or :version to see
+
+requires xserver to run
+
+to use brew to compile in:
+
+1. Edit formula for vim such that configure sets:
+
+--with-x and --with-features=huge and --enable-gui=no
 
 
 Key Commands
@@ -88,33 +125,10 @@ Additional useful quickfix commands for the breakpoint list or test failures:
 - `:cr` goto the begining of the list
 
     
-Installation
-------------
-
-pip install nose
-pip install ipdb
-pip install ipython
-
-git clone tmux-pane
-vim script ???
-ipdbplugin
-
-
-NOTES: 
-
-need +clientserver use vim --version or :version to see
-
-requires xserver to run
-
-to use brew to compile in:
-
-1. Edit formula for vim such that configure sets:
-
---with-x and --with-features=huge and --enable-gui=no
-
-
 Configuration
 -------------
+
+edit this and tie to semicolon# functions
 
 - `:SemicolonToggleBreakpoint` (at current line)
 - `:SemicolonClearBreakpoints` (within current project scope)
@@ -136,14 +150,8 @@ Todos and Future Functionality
 - travel to breakpoint when navigating up down in breakppoint window with
   preview
 - add/remove conditions to a breakpoint 
-- add/remove ignores
+- add/remove ignores to a breakpoint
 - disable breakpoints
-
-
-
-- when running tests comment out all breakpoints
-- debug just a specific test from the quickfix window
-
 
 
 License

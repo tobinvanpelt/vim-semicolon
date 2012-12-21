@@ -1,11 +1,10 @@
-" vim-semicolon
+" vim-semicolon plugin file
 " 
 " https://github.com/tobinvanpelt/vim-semicolon.git
 "
 " Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
 " See :help license.
 
-" exit if not unix
 
 if !has('unix')
     echoerr 'Not unix.'
@@ -32,38 +31,20 @@ func! s:exit()
 endfunc
 
 
-nnoremap <silent> ;; :call semicolon#toggle_breakpoint()<cr>
+" global debugger mappings
 nnoremap <silent> ;b :call semicolon#toggle_breakpoint_list()<cr>
 nnoremap <silent> ;xx :call semicolon#delete_all_breakpoints()<cr>
-nnoremap <silent> ;x :call semicolon#delete_file_breakpoints()<cr>
 nnoremap <silent> ;q :call semicolon#quit_debugger()<cr>
 
-nnoremap <silent> ;r :call semicolon#run()<cr>
-nnoremap <silent> ;rr :call semicolon#run_args_prompt()<cr>
 nnoremap <silent> ;R :call semicolon#run_prompt()<cr>
-
 
 command! -nargs=? -complete=file SemicolonProject call semicolon#set_project(<f-args>)
 
+" python file specific debugger mappings
+autocmd FileType python nnoremap <silent> ;; :call semicolon#toggle_breakpoint()<cr>
+autocmd FileType python nnoremap <silent> ;x :call semicolon#delete_file_breakpoints()<cr>
+
+autocmd FileType python nnoremap <silent> ;r :call semicolon#run()<cr>
+autocmd FileType python nnoremap <silent> ;rr :call semicolon#run_args_prompt()<cr>
+
 call semicolon#init()
-
-
-
-"nnoremap <silent> ;; :SemicolonToggleConsole<cr>
-"nnoremap <silent> ;i :SemicolonIPython<cr>
-"nnoremap <silent> ;ii :SemicolonRestartIPython<cr>
-"           
-"nnoremap ;T :SemicolonRunAllTests<cr>
-"nnoremap ;R :call semicolon#run_prompt()<cr>
-
-
-" Commands
-"command! SemicolonToggleConsole call semicolon#toggle_console()
-"command! SemicolonIPython call semicolon#select_ipython()
-"command! SemicolonRestartIPython call semicolon#restart_ipython()
-"
-"command! -nargs=* -complete=file SemicolonRun call semicolon#run(<f-args>)
-"command! -nargs=* -complete=file SemicolonDebugTest call semicolon#debug_test(<f-args>)
-"command! SemicolonRunAllTests call semicolon#run_all_tests()
-
-"autocmd VimLeave * call semicolon#quit()
