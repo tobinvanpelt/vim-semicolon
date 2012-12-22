@@ -7,28 +7,26 @@
 
 
 if !has('unix')
-    echoerr 'Not unix.'
-    call s:exit()
+    echom 'Not unix.'
+    finish
 endif
 
 
 if !has('signs')
-    echoerr "This version of vim does not support 'signs'."
-    call s:exit()
+    echom "This version of vim does not support 'signs'."
+    echom 'Semicolon disabled.'
+    finish
 endif
 
 
 " move this somewhere else ?
 if $TMUX == ''
-    echoerr "Semicolon must be run within a tmux session.
-        \ (Use 'tmux new vim' to start one.)"
-    call s:exit()
+    echom "Semicolon must be run from within a tmux session."
+    echom "(use 'tmux new vim' to start one)"
+    echom 'Semicolon disabled.'
+    finish
 endif
 
-func! s:exit()
-    echoerr 'Semicolon disabled.'
-    finish
-endfunc
 
 
 " global debugger mappings

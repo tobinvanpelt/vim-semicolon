@@ -36,7 +36,7 @@ set efm=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
 
 
 " initialize variables
-let s:python_path = expand('<sfile>:h') . '/../python'
+let s:base_path = resolve(expand('<sfile>:h') . '/..')
 let s:running = 0
 let s:current_line_id = 1
 let s:next_id = 2
@@ -178,18 +178,26 @@ func! semicolon#run(...)
 
     windo update
     
-    let vimpdb = s:python_path . '/vimpdb.py'
+    let repeater = s:base_path . '/scripts/repeater'
+    let vimpdb = s:base_path . '/python/vimpdb.py'
     let target = v:servername
     
-    let cmd = 'cd ' . s:project_dir . '; python ' . vimpdb . ' ' . target .
-                \ ' ' . fname . ' ' . join(args, ' ') 
+    if len(args) == 0
+        let sargs = ''
+    else
+        let sargs = ' ' . join(args, ' ')
+    endif
+        
+    let base_cmd = 'python ' . vimpdb . ' ' . target . ' ' . fname . sargs
+                 
+    let cmd = repeater . ' ' . base_cmd 
 
     if s:running
         call system('tmux respawn-pane -k -t ' . s:ipdb_pane . ' "' . cmd . '"')
         call system('tmux select-pane -t ' . s:ipdb_pane)
     else
         call system('tmux split-window -p 25 "' . cmd . '"')
-        let s:ipdb_pane = matchstr(system('tmux-pane'),'%\d*')
+        let s:ipdb_pane = matchstr(system('tmux-pane'), '%\d*')
         let s:running = 1
     endif
 

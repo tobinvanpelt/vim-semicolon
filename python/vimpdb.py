@@ -17,6 +17,14 @@ from ipdb.__main__ import def_colors, Pdb, Restart
 vim_server = None
 
 
+def red(msg):
+    return '\033[91m' + msg + '\033[0m'
+
+
+def blue(msg):
+    return '\033[94m' + msg + '\033[0m'
+
+
 class VimPdb(Pdb):
     def preloop(self):
         lineno = self.curframe.f_lineno
@@ -128,32 +136,47 @@ def main():
     sys.path[0] = os.path.dirname(mainpyfile)
 
     vimpdb = VimPdb(def_colors)
-    while 1:
+
+    fargs = mainpyfile + ' ' + ' '.join(sys.argv[2:])
+    line = red('-' * (len(fargs) + 10))
+    print line
+    print red('DEBUG:  ') + fargs
+    print line
+
+    try:
+        vimpdb._runscript(mainpyfile)
+        if vimpdb._user_requested_quit:
+            # exit with no error code
+            send_vim('semicolon#end_debug()')
+            return
+
+        else:
+            print blue('Program completed.')
+
+    except Restart:
+        sys.exit(1)  # auto restart
+
+    except SystemExit:
+        code = sys.exc_info()[1]
+        print blue('Exited:  ') + 'sys.exit(%s)' % code
+
+    except:
+        print blue('\n--- EXCEPTION ---')
+        traceback.print_exc()
+        print blue('\n--- BEGIN POST MORTEM ---')
+
         try:
-            vimpdb._runscript(mainpyfile)
-            if vimpdb._user_requested_quit:
-                break
-            print "The program finished and will be restarted.\n"
-
-        except Restart:
-            print "Restarting", mainpyfile, "with arguments:"
-            print "\t" + " ".join(sys.argv[2:])
-
-        except SystemExit:
-            # In most cases SystemExit does not warrant a post-mortem session.
-            print "The program exited via sys.exit(). Exit status: ",
-            print sys.exc_info()[1]
-
-        except:
-            traceback.print_exc()
-            print "Uncaught exception. Entering post mortem debugging"
-            print "Running 'cont' or 'step' will restart the program"
             t = sys.exc_info()[2]
             vimpdb.interaction(None, t)
-            print "Post mortem debugger finished. The " + mainpyfile + \
-                  " will be restarted"
 
-    send_vim('semicolon#end_debug()')
+        except Restart:
+            sys.exit(1)  # auto restart
+
+        finally:
+            print blue('--- END POST MORTEM ---')
+
+    raw_input(blue('\nPRESS ANY KEY TO RESTART\n'))
+    sys.exit(1)
 
 
 if __name__ == '__main__':
