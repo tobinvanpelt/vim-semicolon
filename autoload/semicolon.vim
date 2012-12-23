@@ -17,6 +17,12 @@
 " ;T - run all tests 
 "
 "
+" resolve current test for ;d
+" names correct on DEBUG: header
+" temp break and c on start - use ! ?
+" go into post-mortem ?
+"
+"
 " how to connect servername with start of debugger reliably 
 "
 " find current class and function:  http://jeetworks.org/node/147
@@ -37,6 +43,10 @@ set efm=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
 
 " initialize variables
 let s:base_path = resolve(expand('<sfile>:h') . '/..')
+let s:repeater_path = s:base_path . '/scripts/repeater'
+let s:vimpdb_path = s:base_path . '/python/vimpdb.py'
+let s:nose_debugger_path = s:base_path . '/python/nosedebug.py'
+
 let s:running = 0
 let s:current_line_id = 1
 let s:next_id = 2
@@ -178,30 +188,16 @@ func! semicolon#run(...)
 
     windo update
     
-    let repeater = s:base_path . '/scripts/repeater'
-    let vimpdb = s:base_path . '/python/vimpdb.py'
-    let target = v:servername
-    
     if len(args) == 0
         let sargs = ''
     else
         let sargs = ' ' . join(args, ' ')
     endif
         
-    let base_cmd = 'python ' . vimpdb . ' ' . target . ' ' . fname . sargs
+    let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
+                \ . fname . sargs
                  
-    let cmd = repeater . ' ' . base_cmd 
-
-    if s:running
-        call system('tmux respawn-pane -k -t ' . s:ipdb_pane . ' "' . cmd . '"')
-        call system('tmux select-pane -t ' . s:ipdb_pane)
-    else
-        call system('tmux split-window -p 25 "' . cmd . '"')
-        let s:ipdb_pane = matchstr(system('tmux-pane'), '%\d*')
-        let s:running = 1
-    endif
-
-    let s:current_file = expand('%:p')
+    call s:run_debugger(cmd)
 endfunc
 
 
@@ -209,8 +205,8 @@ endfunc
 " prompt for arguments to run
 "
 func! semicolon#run_args_prompt()
-    let fname = expand('%') 
-    let args = input('ipdb ' . fname . ' ', '', 'file')
+    let fname = expand('%:p') 
+    let args = input('debug: ' . fname . ' ', '', 'file')
     call call('semicolon#run', insert(split(args, '\ '), fname))
 endfunc
 
@@ -219,8 +215,44 @@ endfunc
 " prompt for filename and arguments to run
 "
 func! semicolon#run_prompt()
-    let args = input('ipdb ', '', 'file')
+    let args = input('debug: ', '', 'file')
     call call('semicolon#run', split(args, '\ '))
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! semicolon#debug(...)
+    let res = call('s:parse', a:000)
+    if len(res) == 0
+        return
+    endif
+
+    let fname = res[0]
+
+    windo update
+    
+    let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
+                \ . '-t ' . fname . ' '
+                \ . s:nose_debugger_path . ' ' . fname
+                 
+    call s:run_debugger(cmd)
+endfunc
+
+
+" -----------------------------------------------------------------------------
+" TODO: Fix this
+func! semicolon#debug_args_prompt()
+    let fname = expand('%:p') 
+    let args = input('debug test: ' . fname . ' ', '', 'file')
+    call call('semicolon#debug', insert(split(args, '\ '), fname))
+endfunc
+
+
+" -----------------------------------------------------------------------------
+" TODO: Fix this
+func! semicolon#debug_prompt()
+    let args = input('debug test: ', '', 'file')
+    call call('semicolon#debug', split(args, '\ '))
 endfunc
 
 
@@ -551,6 +583,24 @@ func! s:update_pdbrc_qf()
     endif 
 
     redraw!
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:run_debugger(cmd)
+    let cmd = 'cd ' . s:project_dir . '; ' . s:repeater_path . ' ' . a:cmd 
+
+    if s:running
+        call system('tmux respawn-pane -k -t ' . s:ipdb_pane
+                    \ . ' "' . cmd . '"')
+        call system('tmux select-pane -t ' . s:ipdb_pane)
+    else
+        call system('tmux split-window -p 25 "' . cmd . '"')
+        let s:ipdb_pane = matchstr(system('tmux-pane'), '%\d*')
+        let s:running = 1
+    endif
+
+    let s:current_file = expand('%:p')
 endfunc
 
 

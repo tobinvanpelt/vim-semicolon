@@ -35,6 +35,7 @@ nnoremap <silent> ;xx :call semicolon#delete_all_breakpoints()<cr>
 nnoremap <silent> ;q :call semicolon#quit_debugger()<cr>
 
 nnoremap <silent> ;R :call semicolon#run_prompt()<cr>
+nnoremap <silent> ;D :call semicolon#debug_prompt()<cr>
 
 command! -nargs=? -complete=file SemicolonProject call semicolon#set_project(<f-args>)
 
@@ -44,5 +45,8 @@ autocmd FileType python nnoremap <silent> ;x :call semicolon#delete_file_breakpo
 
 autocmd FileType python nnoremap <silent> ;r :call semicolon#run()<cr>
 autocmd FileType python nnoremap <silent> ;rr :call semicolon#run_args_prompt()<cr>
+
+autocmd FileType python nnoremap <silent> ;d :call semicolon#debug()<cr>
+autocmd FileType python nnoremap <silent> ;dd :call semicolon#debug_args_prompt()<cr>
 
 call semicolon#init()

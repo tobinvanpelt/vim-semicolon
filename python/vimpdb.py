@@ -9,6 +9,7 @@ A wrapper to ipdb.  Commands are sent between vim and ipdb via tmux.
 import sys
 import os
 import traceback
+from optparse import OptionParser
 
 from bdb import Breakpoint
 from ipdb.__main__ import def_colors, Pdb, Restart
@@ -115,40 +116,43 @@ class VimPdb(Pdb):
 
 
 def send_vim(cmd):
+    vim_server = options.servername
     os.system('vim --servername %s --remote-expr "%s"' % (vim_server, cmd))
 
 
 def main():
     '''Main loop taken from ipdb.'''
 
-    global vim_server
-    vim_server = sys.argv[1]
-
-    mainpyfile = sys.argv[2]     # Get script filename
+    mainpyfile = args[0]     # Get script filename
 
     if not os.path.exists(mainpyfile):
         print 'Error:', mainpyfile, 'does not exist'
         sys.exit(1)
 
-    del sys.argv[0]         # Hide "pdb.py" from argument list
+    debugfile = options.target
+    if debugfile is None:
+        debugfile = mainpyfile
+        dargs = args[1:]
+    else:
+        dargs = args[2:]
 
     # Replace pdb's dir with script's dir in front of module search path.
     sys.path[0] = os.path.dirname(mainpyfile)
 
     vimpdb = VimPdb(def_colors)
 
-    fargs = mainpyfile + ' ' + ' '.join(sys.argv[2:])
+    fargs = debugfile + ' ' + ' '.join(dargs)
     line = red('-' * (len(fargs) + 10))
     print line
     print red('DEBUG:  ') + fargs
     print line
 
+    restart = True
     try:
         vimpdb._runscript(mainpyfile)
+
         if vimpdb._user_requested_quit:
-            # exit with no error code
-            send_vim('semicolon#end_debug()')
-            return
+            restart = False
 
         else:
             print blue('Program completed.')
@@ -162,22 +166,48 @@ def main():
 
     except:
         print blue('\n--- EXCEPTION ---')
-        traceback.print_exc()
-        print blue('\n--- BEGIN POST MORTEM ---')
+        #traceback.print_exc()
+        exc_lines = traceback.format_exc().splitlines()
+        for k, line in enumerate(exc_lines):
+            if debugfile in line:
+                break
+
+        for line in exc_lines[k:]:
+            print line
+
+        print blue('\n--- BEGIN POST-MORTEM ---')
 
         try:
             t = sys.exc_info()[2]
             vimpdb.interaction(None, t)
 
+            if vimpdb._user_requested_quit:
+                restart = False
+
         except Restart:
             sys.exit(1)  # auto restart
 
         finally:
-            print blue('--- END POST MORTEM ---')
+            print blue('--- END POST-MORTEM ---')
 
-    raw_input(blue('\nPRESS ANY KEY TO RESTART\n'))
-    sys.exit(1)
+    if restart:
+        raw_input(blue('\nPRESS ANY KEY TO RESTART\n'))
+        sys.exit(1)
+
+    else:
+        send_vim('semicolon#end_debug()')
+        sys.exit(0)
 
 
 if __name__ == '__main__':
+    parser = OptionParser()
+    parser.add_option('-s', '--servername', dest='servername', default='VIM',
+            help='vim servername obtained with vim --serverlist')
+
+    parser.add_option('-t', '--target', dest='target',
+            help='the target file which is the source of the stack traces')
+
+    (options, args) = parser.parse_args()
+    sys.argv = args  # set the system args correctly - minus the wrapper
+
     main()
