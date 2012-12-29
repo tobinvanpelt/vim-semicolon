@@ -9,6 +9,8 @@ class NoAnalysis(Plugin):
     report.
     '''
 
+    score = 0
+
     def options(self, parser, env):
         print 'aaa'
         parser.add_option('--noanalysis', action='store_true',
@@ -17,7 +19,7 @@ class NoAnalysis(Plugin):
     def configure(self, options, conf):
         print 'bbb'
         print options.no_analysis
-        self._enabled = options.no_analysis
+        self.enabled = options.no_analysis
 
     def addError(self, test, err):
         print 'ccc'

@@ -1,9 +1,22 @@
 #!/bin/bash
-STATUS=1
+# EXIT_CODE = 0 repeat
+# EXIT_CODE = 1 quit
+# EXIT_CODE = 2 prompt for repeat
 
-while [ $STATUS -eq 1 ];
-do
+while [ 1 ]; do
     clear
     eval "$@"
-    STATUS=$?
+
+    EXIT_CODE=$?
+    if [ "$EXIT_CODE" -eq 1 ]; then
+        break
+
+    elif [ "$EXIT_CODE" -eq 2 ]; then
+        echo '';
+        read -s -n 1 -p "PRESS 'r' TO RESTART" RESULT;
+        if [ "$RESULT" != "r" ]; then
+            break;
+        fi
+    fi
 done
+read

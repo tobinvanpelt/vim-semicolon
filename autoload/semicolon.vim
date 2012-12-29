@@ -22,6 +22,9 @@
 " temp break and c on start - use ! ?
 " go into post-mortem ?
 "
+" fast ipython
+" auto workon with tmux
+"
 "
 " how to connect servername with start of debugger reliably 
 "
@@ -29,7 +32,7 @@
 "
 " filetype=qf for tests <enter> goto, <space> run debug 
 " filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
-"
+
 
 highlight Breakpoint cterm=bold ctermfg=DarkRed ctermbg=None
 highlight CurrentDebug cterm=bold ctermfg=23 ctermbg=23
@@ -44,7 +47,7 @@ set efm=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
 " initialize variables
 let s:base_path = resolve(expand('<sfile>:h') . '/..')
 let s:repeater_path = s:base_path . '/scripts/repeater'
-let s:vimpdb_path = s:base_path . '/python/vimpdb.py'
+let s:vimpdb_path = s:base_path . '/python/vimipdb.py'
 let s:nose_debugger_path = s:base_path . '/python/nosedebug.py'
 
 let s:running = 0
@@ -175,84 +178,80 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
-" run current file if no .py is given.
+" run with argument
 "
 func! semicolon#run(...)
-    let res = call('s:parse', a:000)
-    if len(res) == 0
+    if a:0 == 0
+        return 
+    endif
+
+    let fname = s:resolve_python_file(a:1)
+    if fname == ''
         return
     endif
 
-    let fname = res[0]
-    let args = res[1]
+    let args  = fname . ' ' . join(a:000[1:], ' ')
+    call s:run(args)
+endfunc
 
-    windo update
-    
-    if len(args) == 0
-        let sargs = ''
+
+" -----------------------------------------------------------------------------
+" run current python file
+"
+func! semicolon#run_current()
+    let fname = expand('%:p')
+    call s:run(fname)
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! semicolon#debug_location(cont)
+    let fname = expand('%:p')
+    let test = pylocator#get_location()
+    let args = fname . ':' . test
+    call s:debug(args, a:cont)
+endfunc
+
+
+func! s:debug(args, cont)
+    if a:cont == 0
+        let cflag = ''
+
     else
-        let sargs = ' ' . join(args, ' ')
+        let cflag = ' -c '
+
     endif
-        
-    let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
-                \ . fname . sargs
+
+    windo update
+
+    let cmd = 'python ' . s:vimpdb_path . ' -n ' . cflag .
+                \ ' -s ' . v:servername . ' ' . a:args
                  
     call s:run_debugger(cmd)
 endfunc
 
 
 " -----------------------------------------------------------------------------
-" prompt for arguments to run
-"
-func! semicolon#run_args_prompt()
-    let fname = expand('%:p') 
-    let args = input('debug: ' . fname . ' ', '', 'file')
-    call call('semicolon#run', insert(split(args, '\ '), fname))
-endfunc
+func! semicolon#debug(test)
+    let test = split(a:test, ':')
 
-
-" -----------------------------------------------------------------------------
-" prompt for filename and arguments to run
-"
-func! semicolon#run_prompt()
-    let args = input('debug: ', '', 'file')
-    call call('semicolon#run', split(args, '\ '))
-endfunc
-
-
-" -----------------------------------------------------------------------------
-func! semicolon#debug(...)
-    let res = call('s:parse', a:000)
-    if len(res) == 0
+    if len(test) != 2
+        echo 'Inalid testname.  Use format module_name:class_name.test_name'
         return
     endif
 
-    let fname = res[0]
+    let [mname, cname] = test
 
-    windo update
-    
+    let mname = s:resolve_python_file(mname)
+    if mname == ''
+        return
+    endif
+
+    let testname = mname . ':' . cname
     let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
-                \ . '-t ' . fname . ' '
-                \ . s:nose_debugger_path . ' ' . fname
+                \ . '-n ' . testname
                  
     call s:run_debugger(cmd)
-endfunc
-
-
-" -----------------------------------------------------------------------------
-" TODO: Fix this
-func! semicolon#debug_args_prompt()
-    let fname = expand('%:p') 
-    let args = input('debug test: ' . fname . ' ', '', 'file')
-    call call('semicolon#debug', insert(split(args, '\ '), fname))
-endfunc
-
-
-" -----------------------------------------------------------------------------
-" TODO: Fix this
-func! semicolon#debug_prompt()
-    let args = input('debug test: ', '', 'file')
-    call call('semicolon#debug', split(args, '\ '))
 endfunc
 
 
@@ -267,6 +266,9 @@ func! semicolon#end_debug()
     let s:running = 0
 
     execute 'drop ' . s:current_file
+
+    redraw
+    redrawstatus
 
     return ''
 endfunc
@@ -297,6 +299,24 @@ func! semicolon#set_current_line(filename, line_num)
 
     return ''
 endfunc
+
+
+" -----------------------------------------------------------------------------
+func! semicolon#center_line(filename)
+    if !filereadable(a:filename)
+        return ''
+    endif
+
+    " center
+    execute 'drop ' . a:filename
+    execute 'normal zz'
+
+    " refresh
+    redraw
+    redrawstatus
+
+    return ''
+endfunc!
 
 
 " -----------------------------------------------------------------------------
@@ -332,6 +352,16 @@ endfun
 " -----------------------------------------------------------------------------
 " Private functions
 " -----------------------------------------------------------------------------
+
+" -----------------------------------------------------------------------------
+func! s:run(target)
+    windo update
+
+    let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
+                \ . a:target
+    call s:run_debugger(cmd)
+endfunc
+
 
 " -----------------------------------------------------------------------------
 func! s:clear_current_line()
@@ -536,12 +566,27 @@ func! s:parse(...)
         endif
     endif
 
+    let fname = expand('%:p')
+
     if &filetype != 'python'
+        redraw
         echo 'Filetype must be .py'
         return []
     endif
 
-    return [expand('%:p'), a:000]
+    return [fname, a:000]
+endfunc
+
+
+func! s:resolve_python_file(fname)
+    " TODO:  Also check with project directory as base
+    let fname = expand(a:fname)
+    if !filereadable(fname)
+        echo 'Python file:' a:fname 'not found.'
+        let fname = ''
+    endif
+
+    return fname
 endfunc
 
 

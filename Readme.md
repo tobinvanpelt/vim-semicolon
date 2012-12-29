@@ -83,27 +83,27 @@ Key Commands
 
 Project:
 
-- `:SemicolonProject` returns the current project directory
-- `:SemicolonProject <project_dir>` sets the current project directory
+- `:SemicolonSetProject <project_dir>` sets the current project directory
+(with no argument - reports the current project)
 
+
+- `;.` shortcut to SetProject
 
 Breakpoints:
 
 - `;;`  toggles a breakpoint on/off for the current line in a .py file
 - `;b`  toggles a window listing of all breakpoints in the project 
 - `;x`  delete all breakpoints in the current file
-- `;X` delete all breakpoints in the current project
+- `;xx` delete all breakpoints in the current project
 
 
 Debugging:
 
-- `;r`  runs the current .py file within ipdb
-- `;rr` prompts for arguments to run the current .py file with ipdb
-- `;R`  prompts for filename and arguments 
+- `;r`  runs the current python file within ipdb debugger
+- `;R`  prompts for python filename and arguments to run with ipdb debugger 
 
-- `;d`  debugs the current python test file (using nosetests --ipdb)
-- `;dd` debugs the current python test under cursor (uses nosetests --ipdb)
-- `;D`  debugs a specifc test using a prompt (filename:testname)
+- `;d`  debugs the current python test under the cursor
+- `;D`  debugs a specifc test from prompt (with format module:class.method)
 
 - `;q`  quits the debugger
 
