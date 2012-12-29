@@ -30,6 +30,9 @@ be set and removed from within the ipdb terminal and they are updated
 accordingly in vim. 
 
 
+
+(Note that when debugging tests all fixtrures are constructed.)
+
 Testing
 -------
 
@@ -99,10 +102,13 @@ Breakpoints:
 
 Debugging:
 
-- `;r`  runs the current python file within ipdb debugger
-- `;R`  prompts for python filename and arguments to run with ipdb debugger 
+- `;r`   runs the current python file within ipdb debugger
+- `;rr`  runs the current python file within ipdb debugger and halts on first
+  line
+- `;R`   prompts for python filename and arguments to run with ipdb debugger 
 
 - `;d`  debugs the current python test under the cursor
+- `;d`  debugs the current python test under the cursor and halts on first line
 - `;D`  debugs a specifc test from prompt (with format module:class.method)
 
 - `;q`  quits the debugger

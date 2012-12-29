@@ -44,5 +44,4 @@ class NoAnalysis(Plugin):
 
 if __name__ == '__main__':
     target = sys.argv[1]
-    run(argv=['', '--noanalysis', target],
-            addplugins=[NoAnalysis()])
+    run(argv=['', '--noanalysis', target], addplugins=[NoAnalysis()])

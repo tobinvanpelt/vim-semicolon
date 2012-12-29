@@ -1,5 +1,11 @@
 """
-A wrapper to ipdb that syncs with a vim instance running with +c;ienterver.
+vimipdb.py
+
+A wrapper to ipdb that synchrozies with a vim instance running with
++clienterver. This allows breakpoints to be set in vim, saved in .pdbrc, and
+then run in another tmux terminal with ipdb.
+
+https://github.com/tobinvanpelt/vim-semicolon.git
 
 """
 
@@ -8,7 +14,6 @@ A wrapper to ipdb that syncs with a vim instance running with +c;ienterver.
 import sys
 import os
 import traceback
-import inspect
 import nose
 from optparse import OptionParser
 

@@ -6,29 +6,15 @@
 " See :help license.
 
 
-" tests:
-" ;d - for debugging current file
-" ;dd - debug current test
-" ;D - debug specific file with parameters
-"
-"
 " ;t - run current test file
 " ;tt - run current test
 " ;T - run all tests 
-"
-"
-" resolve current test for ;d
-" names correct on DEBUG: header
-" temp break and c on start - use ! ?
-" go into post-mortem ?
 "
 " fast ipython
 " auto workon with tmux
 "
 "
 " how to connect servername with start of debugger reliably 
-"
-" find current class and function:  http://jeetworks.org/node/147
 "
 " filetype=qf for tests <enter> goto, <space> run debug 
 " filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
@@ -99,7 +85,6 @@ func! semicolon#quit_debugger()
     	let cmd = 'tmux kill-pane -t ' . s:ipdb_pane
     	call system(cmd)
     endif
-    call semicolon#end_debug()
 endfunc
 
 

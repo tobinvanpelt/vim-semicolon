@@ -13,7 +13,6 @@ See :help license.
 
 """
 
-
 import os
 import sys
 import traceback
@@ -42,7 +41,7 @@ class ResultsSplitter(Plugin):
     Output errors and failures to a seperate file.
     """
 
-    name = 'results-splitter'
+    name = 'splitter'
 
     def __init__(self):
         super(ResultsSplitter, self).__init__()

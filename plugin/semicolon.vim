@@ -43,6 +43,7 @@ command! -nargs=? -complete=file SemicolonSetProject call semicolon#set_project(
 command! -nargs=1 -complete=file SemicolonDebugTest call semicolon#debug(<f-args>)
 command! -nargs=* -complete=file SemicolonRun call semicolon#run(<f-args>)
 
+
 " python file specific debugger mappings
 autocmd FileType python nnoremap <silent> ;; :call semicolon#toggle_breakpoint()<cr>
 autocmd FileType python nnoremap <silent> ;x :call semicolon#delete_file_breakpoints()<cr>
