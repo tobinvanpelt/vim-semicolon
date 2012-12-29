@@ -56,6 +56,27 @@ class VimPdb(Pdb):
 
         return res
 
+    def runscript(self, filename, cont=False):
+        import __main__
+        __main__.__dict__.clear()
+        __main__.__dict__.update({"__name__": "__main__",
+                                  "__file__": filename,
+                                  "__builtins__": __builtins__,
+                                 })
+
+        self._wait_for_mainpyfile = 1
+        self.mainpyfile = self.canonic(filename)
+        self._user_requested_quit = 0
+        statement = 'execfile(%r)' % filename
+
+        if cont:
+            self.botframe = sys._getframe(0)
+            self._set_stopinfo(self.botframe, None, -1)
+            sys.settrace(self.trace_dispatch)
+
+        self.run(statement)
+
+
     def preloop(self):
         lineno = self.curframe.f_lineno
         filename = self.curframe.f_code.co_filename
@@ -265,12 +286,6 @@ def _send_vim(cmd):
     os.system('vim --servername %s --remote-expr "%s"' % (vim_server, cmd))
 
 
-def _invalid_test(mname, cname):
-    print red('INVLAID TEST:  ') + cyan(mname + ':') + cname
-    raw_input(blue('\nPress any key to continue.'))
-    sys.exit(1)  # quit request
-
-
 def main():
     global options
 
@@ -300,7 +315,12 @@ def main():
         sys.path[0] = os.path.dirname(mainpyfile)
 
         def script_runner(vimpdb):
-            vimpdb._runscript(mainpyfile)
+            # run target
+            if options.cont:
+                vimpdb.runscript(mainpyfile, cont=True)
+
+            else:
+                vimpdb.runscript(mainpyfile, cont=False)
 
         header = blue('DEBUG:  ') + cyan(args[0]) + ' ' + ' '.join(args[1:])
         msgs = (header, '', blue('EXECUTION ENDED'))
@@ -317,39 +337,31 @@ def main():
         imp = nose.importer.Importer()
         module = imp.importFromPath(fname, mname)
 
-        # get the callable
-        try:
-            call = nose.util.resolve_name(cname, module)
+        load = nose.loader.TestLoader()
+        context = load.loadTestsFromName(cname, module)
+        test = context._tests.next().test
 
-        except AttributeError:
-            _invalid_test(mname, cname)
-
-        # make the test
-        loader = nose.loader.TestLoader()
-
-        if inspect.ismethod(call):
-            test = loader.makeTest(call)
-
-        elif inspect.isfunction(call):
-            import ipdb; ipdb.set_trace()
-            test = loader.makeTest(call, module)
-
-        else:
-            _invalid_test(mname, cname)
+        if isinstance(test, nose.failure.Failure):
+            print red('INVLAID TEST:  ') + cyan(mname + ':') + cname
+            raw_input(blue('\nPress any key to continue.'))
+            sys.exit(1)  # quit request
 
         def fcn_runner(vimpdb):
             vimpdb.execRcLines()
 
-            # run setup with automatic continue
+            # run setup with thin context and for the test
+            vimpdb.runcall_continue(context.setUp)
             vimpdb.runcall_continue(test.setUp)
 
             # run target method
             if options.cont:
                 vimpdb.runcall_continue(test.test, *test.arg)
+
             else:
                 vimpdb.runcall(test.test, *test.arg)
 
             # run teardown with automatic continue
+            vimpdb.runcall_continue(context.tearDown)
             vimpdb.runcall_continue(test.tearDown)
 
         header = blue('DEBUG TEST:  ') + cyan(mname + ':') + cname

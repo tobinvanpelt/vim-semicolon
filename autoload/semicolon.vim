@@ -198,9 +198,9 @@ endfunc
 " -----------------------------------------------------------------------------
 " run current python file
 "
-func! semicolon#run_current()
+func! semicolon#run_current(cont)
     let fname = expand('%:p')
-    call s:run(fname)
+    call s:run(fname, a:cont)
 endfunc
 
 
@@ -210,24 +210,6 @@ func! semicolon#debug_location(cont)
     let test = pylocator#get_location()
     let args = fname . ':' . test
     call s:debug(args, a:cont)
-endfunc
-
-
-func! s:debug(args, cont)
-    if a:cont == 0
-        let cflag = ''
-
-    else
-        let cflag = ' -c '
-
-    endif
-
-    windo update
-
-    let cmd = 'python ' . s:vimpdb_path . ' -n ' . cflag .
-                \ ' -s ' . v:servername . ' ' . a:args
-                 
-    call s:run_debugger(cmd)
 endfunc
 
 
@@ -354,13 +336,39 @@ endfun
 " -----------------------------------------------------------------------------
 
 " -----------------------------------------------------------------------------
-func! s:run(target)
+func! s:run(target, cont)
+    let cflag = s:resolve_cont(a:cont)
+
     windo update
 
-    let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
-                \ . a:target
+    let cmd = 'python ' . s:vimpdb_path . cflag .
+                \ ' -s ' . v:servername . ' ' . a:target
     call s:run_debugger(cmd)
 endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:debug(args, cont)
+    let cflag = s:resolve_cont(a:cont)
+
+    windo update
+
+    let cmd = 'python ' . s:vimpdb_path . ' -n ' . cflag .
+                \ ' -s ' . v:servername . ' ' . a:args
+                 
+    call s:run_debugger(cmd)
+endfunc
+
+
+" -----------------------------------------------------------------------------
+func! s:resolve_cont(cont)
+    if a:cont == 0
+        return ''
+    else
+        return ' -c '
+    endif
+endfunc
+
 
 
 " -----------------------------------------------------------------------------
