@@ -27,7 +27,7 @@ highlight CurrentDebugLine cterm=bold ctermfg=None ctermbg=23
 sign define breakpoint text=* texthl=Breakpoint
 sign define currentline text=>> linehl=CurrentDebugLine texthl=CurrentDebug
 
-set efm=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
+set efm+=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
 
 
 " initialize variables

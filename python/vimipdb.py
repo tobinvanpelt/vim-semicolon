@@ -81,7 +81,6 @@ class VimPdb(Pdb):
 
         self.run(statement)
 
-
     def preloop(self):
         lineno = self.curframe.f_lineno
         filename = self.curframe.f_code.co_filename
@@ -178,6 +177,19 @@ class VimPdb(Pdb):
         _send_vim(cmd)
 
 
+def _line_str(msg=None):
+    if msg is None:
+        msg = ''
+
+    if msg != '':
+        msg = ' ' + msg + ' '
+
+    line = '---' + msg
+    line += '-' * (50 - len(line))
+
+    return line
+
+
 def _post_mortem(entry_file):
     '''Returns restart value: True, False, or None.'''
     vimpdb = VimPdb(def_colors)
@@ -186,7 +198,20 @@ def _post_mortem(entry_file):
 
     etype, value, tb = sys.exc_info()
 
-    ftb = traceback.format_exc().split('\n')
+    # attempt to import and use colorization from rednose
+    try:
+        from rednose import RedNose
+
+        ftb = RedNose()._fmt_traceback(tb)
+        ftb = ftb.split('\n')
+        ftb.append('')
+        ex_line = red('   ' + etype.__name__ + ': ' + value.message)
+        ftb.append(ex_line)
+
+    except ImportError:
+        ftb = traceback.format_exception(etype, value, tb)
+        ftb = ''.join(ftb)
+        ftb = ftb.split('\n')
 
     # save the header line and the file entry point
     while entry_file not in ftb[1]:
@@ -199,22 +224,24 @@ def _post_mortem(entry_file):
         if len(ftb) == 1:
             break
 
-    ftb.insert(1, '  ...')
+    ftb.insert(1, '    ...')
 
-    print red('\n--- EXCEPTION ---')
+    print
+    print red(_line_str('EXCEPTION'))
 
-    for line in ftb: print(line)
+    print '\n'.join(ftb)
 
-    print red('--- BEGIN POST-MORTEM ---')
+    print
+    print red(_line_str('BEGIN POST-MORTEM'))
 
     try:
-        vimpdb.interaction(None, sys.exc_info()[2])
+        vimpdb.interaction(None, tb)
 
         if vimpdb._user_requested_quit:
             raise BdbQuit()
 
     finally:
-        print red('--- END POST-MORTEM ---')
+        print red(_line_str('END POST-MORTEM'))
 
 
 def run(runner, msgs, entry_file):
@@ -226,7 +253,7 @@ def run(runner, msgs, entry_file):
 
     (header_msg, exc_msg, end_msg) = msgs
 
-    line = blue('-' * (len(header_msg) + 10))
+    line = blue(_line_str())
     print line
     print header_msg
     print line
@@ -249,8 +276,7 @@ def run(runner, msgs, entry_file):
 
     except SystemExit:
         code = sys.exc_info()[1]
-        print blue('--- EXITED ---')
-        print blue('sys.exit(%s)' % code)
+        print blue('Exited with sys.exit(%s).' % code)
 
     except:
         try:
