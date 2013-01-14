@@ -9,7 +9,8 @@ https://github.com/tobinvanpelt/vim-semicolon.git
 
 """
 
-# Copyright (c) 2012 i3D Technologies, Inc. All rights reserved.
+# Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
+#See :help license.
 
 import sys
 import os

@@ -15,12 +15,20 @@ endif
 let current_compiler = "nose"
 
 if exists(":CompilerSet") != 2
-  command -nargs=* CompilerSet setlocal <args>
+  command -nargs=* CompilerSet set <args>
 endif
 
-CompilerSet efm=%f:%l:\ fail:\ %m,%f:%l:\ error:\ %m
-CompilerSet shellpipe=--err-file=%s
 
-let s:nose_splitter = expand('<sfile>:h') . '/../python/nose_splitter.py'
-let &l:makeprg='clear; python ' . s:nose_splitter .
-            \ ' $* --with-results-splitter --with-doctest --doctest-tests'
+" make sure we set a virtual_env pre cmd if in one
+if $VIRTUAL_ENV != ''
+    let virtual_env_cmd = '.\ $VIRTUAL_ENV/bin/activate;\ '
+else
+    let virtual_env_cmd = ''
+endif
+
+let s:base_path = resolve(expand('<sfile>:h') . '/..')
+let s:nose = s:base_path . '/python/nose_errfile.py'
+
+CompilerSet efm=%f:%l:%m
+CompilerSet shellpipe=--errfile=%s
+execute 'CompilerSet makeprg=clear;\ ' . virtual_env_cmd . 'python\ ' . s:nose . '\ $*'

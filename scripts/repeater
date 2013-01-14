@@ -1,4 +1,5 @@
 #!/bin/bash
+#
 # EXIT_CODE = 0 repeat
 # EXIT_CODE = 1 quit
 # EXIT_CODE = 2 prompt for repeat

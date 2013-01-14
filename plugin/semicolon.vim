@@ -19,16 +19,6 @@ if !has('signs')
 endif
 
 
-" move this somewhere else ?
-if $TMUX == ''
-    echom "Semicolon must be run from within a tmux session."
-    echom "(use 'tmux new vim' to start one)"
-    echom 'Semicolon disabled.'
-    finish
-endif
-
-
-
 " global debugger mappings
 nnoremap ;. :SemicolonSetProject 
 
@@ -36,12 +26,19 @@ nnoremap <silent> ;b :call semicolon#toggle_breakpoint_list()<cr>
 nnoremap <silent> ;xx :call semicolon#delete_all_breakpoints()<cr>
 nnoremap <silent> ;q :call semicolon#quit_debugger()<cr>
 
+nnoremap <silent> ;t :call semicolon#nosetests()<cr>
+nnoremap <silent> ;tt :call semicolon#nosetests('--failed')<cr>
+
 nnoremap ;R :SemicolonRun 
 nnoremap ;D :SemicolonDebugTest 
+nnoremap ;T :SemicolonNosetests
 
-command! -nargs=? -complete=file SemicolonSetProject call semicolon#set_project(<f-args>)
+command! -nargs=? -complete=file SemicolonProjectDir call semicolon#set_project_dir(<f-args>)
+command! -nargs=? -complete=file SemicolonTestsDir call semicolon#set_tests_dir(<f-args>)
+
 command! -nargs=1 -complete=file SemicolonDebugTest call semicolon#debug(<f-args>)
 command! -nargs=* -complete=file SemicolonRun call semicolon#run(<f-args>)
+command! -nargs=* -complete=file SemicolonNosetests call semicolon#nosetests(<f-args>)
 
 
 " python file specific debugger mappings

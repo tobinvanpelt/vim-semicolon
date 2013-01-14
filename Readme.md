@@ -11,6 +11,9 @@ default binds ';' to 'last-pane' - this a convenient binding to remember to
 switch to the debugger pane and then back to vim quickly.
 
 
+have to start vim in tmux and with --servername
+
+
 Debugging
 ---------
 
@@ -33,11 +36,21 @@ accordingly in vim.
 
 (Note that when debugging tests all fixtrures are constructed.)
 
+
 Testing
 -------
 
+automatically uses a --errfile plugin which sends machine readable content to
+an errorfile so that quickfix can handle it
+
+:compiler nose
 
 
+recomended to use: rednose
+use deault .noserc 
+
+for example :SemicolonNosetests -a __unit__
+for example :SemicolonNosetests --failed
 
 
 
@@ -53,6 +66,8 @@ tmux session.  In addition the following dependenceis exist:
     - [ipdbplugin]
     - [tmux-utils]
 
+optional virtualenv (and wrapper)
+
 ... give pip and build steps here 
 
 
@@ -62,6 +77,8 @@ Installation
 pip install nose
 pip install ipdb
 pip install ipython
+pip install rednose
+
 
 git clone tmux-pane
 vim script ???
@@ -69,6 +86,13 @@ ipdbplugin
 
 
 NOTES: 
+
+- TODO - warning message if no tmux
+warning if not run with --servername
+
+give suggestion of alias
+
+
 
 need +clientserver use vim --version or :version to see
 

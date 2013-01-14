@@ -41,7 +41,7 @@ class ResultsSplitter(Plugin):
     Output errors and failures to a seperate file.
     """
 
-    name = 'splitter'
+    name = 'results-splitter'
 
     def __init__(self):
         super(ResultsSplitter, self).__init__()
@@ -237,4 +237,5 @@ class ResultsSplitter(Plugin):
 
 if __name__ == '__main__':
     # used to run nosetests with plugin active
-    nose.run(argv=sys.argv, addplugins=[ResultsSplitter()])
+    args = ['', '--with-results-splitter', sys.argv[1]]
+    nose.run(argv=args, addplugins=[ResultsSplitter()])
