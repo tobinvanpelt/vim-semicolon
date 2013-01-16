@@ -1,17 +1,93 @@
 Semicolon
 =========
 
-Semicolon creates a python debugging (ipdb) and testing (nose) environment
-using tmux and terminal vim.  This creates a lightweight version of some IDE
-functionality.
+Semicolon creates a development environment within terminal vim for python that
+includes integrated debugging (using ipdb) and testing (using nose).
 
-Vim must be run within a tmux session and with +clientserver support and given
-a servername (see Installation and Configuration below). Note that tmux by
-default binds ';' to 'last-pane' - this a convenient binding to remember to
-switch to the debugger pane and then back to vim quickly.
+From vim, breakpoints can be set on a python file and ipdb is used for
+debugging using a the tmux mutiplexer.  As the user is debugging the file, the
+current line is shown within vim.
+
+Semicolon maintains a notion of a current project directory and a tests
+directory.  When started if a virtualenv is activated the project for that
+virtualenvironment is utilized (see virtualenvwrapper).  If there is no
+virtualenv then the current directory is used for both the project and test
+directories.
+
+Additionally, the file '.semicolon.vim' is looked for in the current directory
+or project directory,  If it exists it is sourced.  This can be used to set
+variables such as the test directory:
+
+set g:semicolon_tests_directory = ~/tests
 
 
-have to start vim in tmux and with --servername
+Dependencies and Requirements
+-----------------------------
+Semicolon requires +clientserver support within terminal vim running within a
+tmux session.  In addition the following dependenceis exist: 
+    
+    - ipdb
+    - nose
+    - ipdbplugin
+    - tmux-utils
+                                   
+Optionally the following are highly recomended:
+    - virtualenv
+    - virtualenvwrapper
+    - rednose
+
+
+Installation
+------------
+It is recomended that you use pathogen to install semicolon.
+
+Additionally follow these steps to install other dependencies:
+
+1. Python dependencies.
+
+    pip install nose
+    pip install ipdb
+    pip install ipython
+
+    pip install virtualenv
+    pip install virtualenvwrapper
+    pip install rednose
+
+2. Install tmux.
+
+3. Install tmux-utils.
+
+    git clone git://github.com/tobinvanpelt/tmux-utils.git
+
+4. Install Xserver (on Mac OSX)
+
+5. Compile vim with clientserver support. (use vim --version or :version to see
+   if terminal is built with clientserver support). Edit the vim formula and brew
+   accordingly:
+
+    --with-x and --with-features=huge and --enable-gui=no
+
+
+Starting
+--------
+
+1. (optional sets project first) workon <project>
+
+2. tmux
+
+3. vim --servername VIM
+
+It is recomended to use the helper script to start semicolon.  To do so put the
+following in your startup file (.bashrc, .zshrc, .profile, etc):
+
+    source <install location>/scirpts/semicolon_init 
+
+Then at the command prompt use:
+
+   semicolon <virtualenv project>
+
+This will activate the virtualenv project, start tmux, and launch vim.  The
+<virtualenv project> is optional.
 
 
 Debugging
@@ -32,92 +108,56 @@ breakpoitns can persists between vim sessions. Note that breakpoints can also
 be set and removed from within the ipdb terminal and they are updated
 accordingly in vim. 
 
-
-
-(Note that when debugging tests all fixtrures are constructed.)
+Furthermore, tests written for nose can also be debugged.  When debugging these
+tests all appropriate fixtures are setup and torn down.
 
 
 Testing
 -------
 
-automatically uses a --errfile plugin which sends machine readable content to
-an errorfile so that quickfix can handle it
+When running tests in vim the `:make` compiler command is utilized.  Tests are
+run using nosetests with a special plugin taht sends results to an error file.
+This eror file is then displayed in the quickfix window to quickly navigate to
+tests that resilted in error or failed.
 
-:compiler nose
+The recomended usage of the `rednose` plugin provides coloring for more easy
+interpretation of results and the typical `.noserc` can be used to setup
+additional preferences for running nosetests.
 
-.semicolon.vim
+By default, nosetests are run with `--with-id` so that subsequent runs can be
+done with `--failed`.
 
-recomended to use: rednose
-use deault .noserc 
+Note that arguments can be passed to nosetests as always for example:
 
-for example :SemicolonNosetests -a __unit__
-for example :SemicolonNosetests --failed
+    :SemicolonNosetests -a __unit__
 
-
-
-
-Dependencies and Requirements
------------------------------
-
-Semicolon requires +clientserver support within terminal vim running within a
-tmux session.  In addition the following dependenceis exist: 
-    
-    - [ipdb]
-    - [nose]
-    - [ipdbplugin]
-    - [tmux-utils]
-
-optional virtualenv (and wrapper)
-
-... give pip and build steps here 
+to run tests with argument `__unit__`.  All tests are collected from within the
+tests directory location unless specified otherwise.  Automcompletion is
+relative to this location as well.
 
 
-Installation
+Commands
 ------------
+- `:SemicolonProjectDirectory <project_dir>` sets the current project directory
+(with no argument - reports the project directory)
 
-pip install nose
-pip install ipdb
-pip install ipython
-pip install rednose
+- `:SemicolonTestsDirectory <tests_dir>` sets the tests directory
+(with no argument - reports the tests directory)
 
+- `SemicolonDebugTest`
 
-git clone tmux-pane
-vim script ???
-ipdbplugin
+- `SemicolonNosetests`
 
+- `SemicolonRun`
 
-NOTES: 
+...
 
-- TODO - warning message if no tmux
-warning if not run with --servername
-
-give suggestion of alias
-
-
-
-need +clientserver use vim --version or :version to see
-
-requires xserver to run
-
-to use brew to compile in:
-
-1. Edit formula for vim such that configure sets:
-
---with-x and --with-features=huge and --enable-gui=no
-
-
-Key Commands
-------------
-
-Project:
-
-- `:SemicolonSetProject <project_dir>` sets the current project directory
-(with no argument - reports the current project)
-
-
-- `;.` shortcut to SetProject
+Hot Keys
+--------
 
 Breakpoints:
+
+- `;.` shortcut to SetProject
 
 - `;;`  toggles a breakpoint on/off for the current line in a .py file
 - `;b`  toggles a window listing of all breakpoints in the project 
@@ -128,7 +168,7 @@ Breakpoints:
 Debugging:
 
 - `;r`   runs the current python file within ipdb debugger
-- `;rr`  runs the current python file within ipdb debugger and halts on first
+- `;rr`  runs the current python file within ipdb debugger and halts at first
   line
 - `;R`   prompts for python filename and arguments to run with ipdb debugger 
 
@@ -141,9 +181,9 @@ Debugging:
 
 Testing:
 
-- `;T`  runs all project tests
+- `;T`  prompts for arguments to run tests
 - `;t`  runs the curret python test file
-- `;tt` runs current test under cursor
+- `;tt` reruns the previously failed tests
 
 
 Additional useful quickfix commands for the breakpoint list or test failures:
@@ -156,31 +196,14 @@ Additional useful quickfix commands for the breakpoint list or test failures:
 - `:cr` goto the begining of the list
 
     
-Configuration
--------------
-
-edit this and tie to semicolon# functions
-
-- `:SemicolonToggleBreakpoint` (at current line)
-- `:SemicolonClearBreakpoints` (within current project scope)
-- `:SemicolonToggleBreakpointsList` (for current project scope)
-
-- `:SemicolonRunAllTests` (within current project scope)
-- `:SemicolonRunTest` <test> (run current test file or <test> within current) 
-
-- `:SemicolonRun` <arguments> (pass in <arguments> to current file)
-- `:SemicolonDebugTest` (run the current test file)
-
-- `:SemicolonToggleConsole`
-
+Note that tmux by default binds ';' to 'last-pane' - this a convenient binding
+to remember to switch to the debugger pane and then back to vim quickly.
 
 
 Todos and Future Functionality
 ------------------------------
 
-- travel to breakpoint when navigating up down in breakppoint window with
-  preview
-- add/remove conditions to a breakpoint 
+- add/remove conditional breakpoints
 - add/remove ignores to a breakpoint
 - disable breakpoints
 
@@ -189,5 +212,3 @@ License
 -------
 Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
 See :help license.
-
-

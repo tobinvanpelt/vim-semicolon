@@ -6,21 +6,6 @@
 " See :help license.
 
 
-" ;t - run current test file
-" ;tt - run current test
-" ;T - run all tests 
-"
-" fast ipython
-" auto workon with tmux
-"
-"
-" how to connect servername with start of debugger reliably 
-"
-" filetype=qf for tests <enter> goto, <space> run debug 
-" filetype=qf for breakppints <enter> goto, <d>remove, and disable, codition
-
-
-highlight Breakpoint cterm=bold ctermfg=DarkRed ctermbg=None
 highlight CurrentDebug cterm=bold ctermfg=23 ctermbg=23
 highlight CurrentDebugLine cterm=bold ctermfg=None ctermbg=23
 
