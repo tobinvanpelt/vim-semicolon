@@ -19,10 +19,13 @@ import sys
 try:
     import nose
     from nose.plugins import Plugin
-except:
-    print 'The current environment does not have nose installed.'
-    print '\nTo install nose use:'
-    print '   > pip install nose'
+
+except Exception, e:
+    print e
+    print "The current environment does not have 'nose' installed."
+    print "\nTo install 'nose' use:"
+    print "\n   > pip install nose"
+
     sys.exit(0)
 
 

@@ -66,8 +66,9 @@ func! semicolon#init()
     endif
 
     " last read and execute .semicolon.vim file if it exists 
-    if filereadable('.semicolon.vim')
-        source .semicolon.vim
+    let config_file = g:semicolon_project_dir . '/.semicolon.vim'
+    if filereadable(config_file)
+        exec 'source ' . config_file
     end
 
     " set hooks
@@ -251,13 +252,18 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
-func! semicolon#nosetests(...)
-    let args = ' ' . join(a:000,' ')
+" run current python file
+"
+func! semicolon#nosetest_current()
+    let fname = expand('%:p')
+    call s:nosetests(fname)
+endfunc
 
-    echom args
-    execute 'make! -w ' . g:semicolon_tests_dir . args
-    let s:qf_window = 'test_results'
-    botright cwindow
+
+" -----------------------------------------------------------------------------
+func! semicolon#nosetests(...)
+    let args = join(a:000,' ')
+    call s:nosetests(args)
 endfunc
 
 
@@ -690,6 +696,14 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
+func! s:nosetests(args)
+    execute 'make! -w ' . g:semicolon_tests_dir . ' --with-id ' . a:args
+    let s:qf_window = 'test_results'
+    botright cwindow
+endfunc
+
+
+" -----------------------------------------------------------------------------
 func! s:tmux(cmd)
     if $TMUX != ''
         return system('tmux ' . a:cmd)
@@ -699,7 +713,3 @@ func! s:tmux(cmd)
         echom "(use 'tmux new vim' to restart vim in a compatible way)"
     endif
 endfunc
-
-
-
-

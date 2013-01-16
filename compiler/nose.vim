@@ -21,9 +21,9 @@ endif
 
 " make sure we set a virtual_env pre cmd if in one
 if $VIRTUAL_ENV != ''
-    let virtual_env_cmd = '.\ $VIRTUAL_ENV/bin/activate;\ '
+    let s:virtual_env_cmd = '.\ $VIRTUAL_ENV/bin/activate;\ '
 else
-    let virtual_env_cmd = ''
+    let s:virtual_env_cmd = ''
 endif
 
 let s:base_path = resolve(expand('<sfile>:h') . '/..')
@@ -31,4 +31,7 @@ let s:nose = s:base_path . '/python/nose_errfile.py'
 
 CompilerSet efm=%f:%l:%m
 CompilerSet shellpipe=--errfile=%s
-execute 'CompilerSet makeprg=clear;\ ' . virtual_env_cmd . 'python\ ' . s:nose . '\ $*'
+
+let s:cmd = 'clear;\ ' . s:virtual_env_cmd . 'python\ ' . s:nose . '\ $*'
+
+execute 'CompilerSet makeprg=' . s:cmd

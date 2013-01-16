@@ -45,6 +45,7 @@ an errorfile so that quickfix can handle it
 
 :compiler nose
 
+.semicolon.vim
 
 recomended to use: rednose
 use deault .noserc 
