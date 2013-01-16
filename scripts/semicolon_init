@@ -1,0 +1,25 @@
+#!/usr/local/bin/zsh
+
+function semicolon {
+    function start_vim {
+        if [ -z "$TMUX" ]; then
+            tmux new "vim --servername $1"
+        else
+            vim --servername $1 
+        fi
+    }
+
+    _pwd=$(pwd)
+
+    if [ "$#" -eq 1 ]; then
+        workon $1
+        start_vim $1
+        deactivate
+    else
+        start_vim VIM
+    fi
+
+    cd $_pwd
+}
+
+compctl -k "( $(workon) )" semicolon
