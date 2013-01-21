@@ -14,7 +14,6 @@ sign define currentline text=>> linehl=CurrentDebugLine texthl=CurrentDebug
 
 set efm+=break\ %f:%l,break\ %f:%l\\,%m,%-G%.%#
 
-compiler! nose
 
 " initialize variables
 let g:semicolon_project_dir = getcwd()
@@ -30,7 +29,7 @@ let s:current_line_id = 1
 let s:next_id = 2
 let s:qf_window = ''
 
-
+compiler! nosetests
 
 " -----------------------------------------------------------------------------
 " Publicly accessible functions

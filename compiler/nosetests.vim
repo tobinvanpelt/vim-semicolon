@@ -12,10 +12,10 @@ endif
 if exists("current_compiler")
   finish
 endif
-let current_compiler = "nose"
+let current_compiler = "nosetests"
 
 if exists(":CompilerSet") != 2
-  command -nargs=* CompilerSet set <args>
+  command -nargs=* CompilerSet setlocal <args>
 endif
 
 
@@ -29,7 +29,7 @@ endif
 let s:base_path = resolve(expand('<sfile>:h') . '/..')
 let s:nose = s:base_path . '/python/nose_errfile.py'
 
-CompilerSet efm=%f:%l:%m
+CompilerSet errorformat=%f:%l:%m
 CompilerSet shellpipe=--errfile=%s
 
 let s:cmd = 'clear;\ ' . s:virtual_env_cmd . 'python\ ' . s:nose . '\ $*'
