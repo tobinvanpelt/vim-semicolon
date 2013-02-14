@@ -12,14 +12,54 @@ https://github.com/tobinvanpelt/vim-semicolon.git
 # Copyright (c) Tobin Van Pelt. Distributed under the same terms as Vim itself.
 #See :help license.
 
-import sys
+
 import os
+import sys
 import traceback
-import nose
+import types
+
 from optparse import OptionParser
 
-from bdb import Breakpoint, BdbQuit
-from ipdb.__main__ import def_colors, Pdb, Restart
+
+options = {}
+
+
+def _parse_args():
+    parser = OptionParser()
+    parser.add_option('-s', '--servername', dest='servername', default='VIM',
+            help='vim servername ( result of vim --serverlist )')
+
+    parser.add_option('-p', '--pdbrc', dest='pdbrc', default=None,
+            help='alternate pdbrc file')
+
+    parser.add_option('-n', '--nose-test', dest='nosetest',
+            action='store_true', default=False,
+            help='whether the argument is a nosetest')
+
+    parser.add_option('-c', '--continue', dest='cont',
+            action='store_true', default=False,
+            help='run with immediate continue')
+
+    return parser.parse_args()
+
+
+def _send_vim(cmd):
+    vim_server = options.servername
+    os.system('vim --servername %s --remote-expr "%s"' % (vim_server, cmd))
+
+
+try:
+    import nose
+
+    from bdb import Breakpoint, BdbQuit
+    from ipdb.__main__ import def_colors, Pdb, Restart
+
+except ImportError:
+    # always end the debugging when import error
+
+    options, args = _parse_args()
+    _send_vim('semicolon#end_debug()')
+    raise
 
 
 def red(msg):
@@ -39,8 +79,27 @@ def cyan(msg):
 
 
 class VimPdb(Pdb):
+    def __init__(self, *args, **kwds):
+        Pdb.__init__(self, *args, **kwds)
+
+        if options.pdbrc is not None:
+            try:
+                rcFile = open(options.pdbrc)
+
+            except IOError:
+                pass
+
+            else:
+                for line in rcFile.readlines():
+                    self.rcLines.append(line)
+
+                rcFile.close()
+
+        self.cont = False
+
     def setup(self, f, t):
         Pdb.setup(self, f, t)
+
         # so 'enter' defaults to continue at start
         self.lastcmd = 'c'
 
@@ -63,6 +122,7 @@ class VimPdb(Pdb):
         return res
 
     def runscript(self, filename, cont=False):
+        # copy _runscript in super class but do not reset is cont=True
         import __main__
         __main__.__dict__.clear()
         __main__.__dict__.update({"__name__": "__main__",
@@ -76,11 +136,28 @@ class VimPdb(Pdb):
         statement = 'execfile(%r)' % filename
 
         if cont:
+            self.execRcLines()
             self.botframe = sys._getframe(0)
-            self._set_stopinfo(self.botframe, None, -1)
-            sys.settrace(self.trace_dispatch)
+            self._set_stopinfo(self.botframe, None, 0)
 
-        self.run(statement)
+        else:
+            self.reset()
+
+        globals = __main__.__dict__
+        locals = globals
+        sys.settrace(self.trace_dispatch)
+
+        if not isinstance(statement, types.CodeType):
+            statement = statement + '\n'
+        try:
+            exec statement in globals, locals
+
+        except BdbQuit:
+            pass
+
+        finally:
+            self.quitting = 1
+            sys.settrace(None)
 
     def preloop(self):
         lineno = self.curframe.f_lineno
@@ -206,7 +283,8 @@ def _post_mortem(entry_file):
         ftb = RedNose()._fmt_traceback(tb)
         ftb = ftb.split('\n')
         ftb.append('')
-        ex_line = red('   ' + etype.__name__ + ': ' + value.message)
+
+        ex_line = red(traceback.format_exception_only(etype, value)[0])
         ftb.append(ex_line)
 
     except ImportError:
@@ -215,7 +293,8 @@ def _post_mortem(entry_file):
         ftb = ftb.split('\n')
 
     # save the header line and the file entry point
-    while entry_file not in ftb[1]:
+    filename = os.path.basename(entry_file)
+    while filename not in ftb[1]:
         try:
             ftb.pop(1)
 
@@ -247,9 +326,10 @@ def _post_mortem(entry_file):
 
 def run(runner, msgs, entry_file):
     ''' Main loop used for debuging.
-    sys.exit(0) - restart request
-    sys.exit(1) - quit request
-    sys.exit(2) - unknown request
+    sys.exit(0) - immediately end
+    sys.exit(1) - allow read of error then end
+    sys.exit(2) - prompt for repeat
+    sys.exit(3) - repeat
     '''
 
     (header_msg, exc_msg, end_msg) = msgs
@@ -301,39 +381,22 @@ def run(runner, msgs, entry_file):
 
     if restart is None:
         # unknown request
-        sys.exit(2)
+        sys.exit(4)
 
     else:
         if restart:
             # restart request
-            sys.exit(0)
+            sys.exit(3)
 
         else:
             # quit request
-            sys.exit(1)
-
-
-def _send_vim(cmd):
-    vim_server = options.servername
-    os.system('vim --servername %s --remote-expr "%s"' % (vim_server, cmd))
+            sys.exit(0)
 
 
 def main():
     global options
 
-    parser = OptionParser()
-    parser.add_option('-s', '--servername', dest='servername', default='VIM',
-            help='vim servername ( result of vim --serverlist )')
-
-    parser.add_option('-n', '--nose-test', dest='nosetest',
-            action='store_true', default=False,
-            help='whether the argument is a nosetest')
-
-    parser.add_option('-c', '--continue', dest='cont',
-            action='store_true', default=False,
-            help='run with immediate continue')
-
-    (options, args) = parser.parse_args()
+    options, args = _parse_args()
 
     if not options.nosetest:
         sys.argv = args  # set the system args correctly - minus the wrapper
@@ -348,11 +411,7 @@ def main():
 
         def script_runner(vimpdb):
             # run target
-            if options.cont:
-                vimpdb.runscript(mainpyfile, cont=True)
-
-            else:
-                vimpdb.runscript(mainpyfile, cont=False)
+            vimpdb.runscript(mainpyfile, cont=options.cont)
 
         header = blue('DEBUG:  ') + cyan(args[0]) + ' ' + ' '.join(args[1:])
         msgs = (header, '', blue('EXECUTION ENDED'))
@@ -402,8 +461,6 @@ def main():
 
 
 if __name__ == '__main__':
-    options = {}
-
     try:
         main()
 

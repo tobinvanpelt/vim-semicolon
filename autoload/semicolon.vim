@@ -6,6 +6,7 @@
 " See :help license.
 
 
+highlight Breakpoint cterm=bold ctermfg=DarkRed ctermbg=None
 highlight CurrentDebug cterm=bold ctermfg=23 ctermbg=23
 highlight CurrentDebugLine cterm=bold ctermfg=None ctermbg=23
 
@@ -29,7 +30,6 @@ let s:current_line_id = 1
 let s:next_id = 2
 let s:qf_window = ''
 
-compiler! nosetests
 
 " -----------------------------------------------------------------------------
 " Publicly accessible functions
@@ -45,8 +45,10 @@ func! semicolon#init()
                     \ '/' . $VIRTUALENVWRAPPER_PROJECT_FILENAME
         let pdir = system('cat ' . fname)[0:-2]
 
-        call semicolon#set_project_dir(pdir)
-        call semicolon#set_tests_dir(pdir)
+        if pdir != ''
+            call semicolon#set_project_dir(pdir)
+            call semicolon#set_tests_dir(pdir)
+        endif
     endif
 
     " last read and execute .semicolon.vim file if it exists 
@@ -221,7 +223,7 @@ func! semicolon#debug(test)
     let cmd = 'python ' . s:vimpdb_path . ' -s ' . v:servername . ' '
                 \ . '-n ' . testname
                  
-    call s:run_debugger(cmd)
+    call s:run_tmux(cmd)
 endfunc
 
 
@@ -353,11 +355,13 @@ endfun
 func! s:run(target, cont)
     let cflag = s:resolve_cont(a:cont)
 
+    let cmd = 'cd ' . g:semicolon_project_dir . '; ' . s:repeater_path . ' ' .
+                \ 'python ' . s:vimpdb_path . cflag .
+                \ ' -s ' . v:servername . ' ' . a:target
+
     windo update
 
-    let cmd = 'python ' . s:vimpdb_path . cflag .
-                \ ' -s ' . v:servername . ' ' . a:target
-    call s:run_debugger(cmd)
+    call s:run_tmux(cmd)
 endfunc
 
 
@@ -365,12 +369,13 @@ endfunc
 func! s:debug(args, cont)
     let cflag = s:resolve_cont(a:cont)
 
+    let cmd = 'cd ' . g:semicolon_project_dir . '; ' . s:repeater_path . ' ' .
+                \ 'python ' . s:vimpdb_path . ' -n ' . cflag .
+                \ ' -s ' . v:servername . ' ' . a:args
+
     windo update
 
-    let cmd = 'python ' . s:vimpdb_path . ' -n ' . cflag .
-                \ ' -s ' . v:servername . ' ' . a:args
-                 
-    call s:run_debugger(cmd)
+    call s:run_tmux(cmd)
 endfunc
 
 
@@ -472,8 +477,8 @@ endfunc
 " -----------------------------------------------------------------------------
 func! s:send_ipdb(cmd)
     if s:running
-        let _cmd = 'send-keys -t ' . s:ipdb_pane .
-                    \ ' "' . a:cmd . '" C-m'
+        let cmd = 'send-keys -t ' . s:ipdb_pane .
+                   \ ' "' . a:cmd . '" C-m'
         call s:tmux(cmd)
     endif
 endfunc
@@ -658,17 +663,15 @@ endfunc
 
 
 " -----------------------------------------------------------------------------
-func! s:run_debugger(cmd)
-    let cmd = 'cd ' . g:semicolon_project_dir . 
-                \ '; ' . s:repeater_path . ' ' . a:cmd 
+func! s:run_tmux(cmd)
 
     if s:running
         call s:tmux('respawn-pane -k -t ' . s:ipdb_pane
-                    \ . ' "' . cmd . '"')
+                    \ . ' "' . a:cmd . '"')
         call s:tmux('select-pane -t ' . s:ipdb_pane)
 
     else
-        call s:tmux('split-window -p 25 "' . cmd . '"')
+        call s:tmux('split-window -p 25 "' . a:cmd . '"')
 
         let s:ipdb_pane = matchstr(system('tmux-pane'), '%\d*')
         let s:running = 1
@@ -681,6 +684,7 @@ endfunc
 
 " -----------------------------------------------------------------------------
 func! s:nosetests(args)
+    compiler nosetests
     execute 'make! -w ' . g:semicolon_tests_dir . ' --with-id ' . a:args
     let s:qf_window = 'test_results'
     botright cwindow
@@ -689,11 +693,11 @@ endfunc
 
 " -----------------------------------------------------------------------------
 func! s:tmux(cmd)
-    if $TMUX != ''
+    if $TMUX != '' && v:servername != ''
         return system('tmux ' . a:cmd)
 
     else
-        echom "Semicolon must be run from within a tmux session."
-        echom "(use 'tmux new vim' to restart vim in a compatible way)"
+        echom "Semicolon must be run from within a tmux session with the clientserver option."
+        echom "(use 'tmux new vim --servername <name>' to restart vim in a compatible way)"
     endif
 endfunc

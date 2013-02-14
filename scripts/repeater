@@ -1,22 +1,36 @@
 #!/bin/bash
 #
-# EXIT_CODE = 0 repeat
-# EXIT_CODE = 1 quit
-# EXIT_CODE = 2 prompt for repeat
+# EXIT_CODE = 0 success and done
+# EXIT_CODE = 3 repeat
+# EXIT_CODE = 4 prompt for repeat
+# EXIT_CODE = all else errors and done
 
-while [ 1 ]; do
+
+REPEAT=1
+while [ $REPEAT -eq 1 ]; do
     clear
     eval "$@"
 
     EXIT_CODE=$?
-    if [ "$EXIT_CODE" -eq 1 ]; then
-        break
+    if [ "$EXIT_CODE" -eq 0 ]; then
+        REPEAT=0
 
-    elif [ "$EXIT_CODE" -eq 2 ]; then
+    elif [ "$EXIT_CODE" -eq 3 ]; then
+        REPEAT=1
+
+    elif [ "$EXIT_CODE" -eq 4 ]; then
         echo '';
         read -s -n 1 -p "PRESS 'r' TO RESTART" RESULT;
-        if [ "$RESULT" != "r" ]; then
-            break;
+
+        if [ "$RESULT" == "r" ]; then
+            REPEAT=1
+        else
+            REPEAT=0
         fi
+
+    else
+        read -s -n 1;
+        REPEAT=0
+
     fi
 done

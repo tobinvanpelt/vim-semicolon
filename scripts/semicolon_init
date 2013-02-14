@@ -9,7 +9,11 @@ function semicolon {
         fi
     }
 
-    _pwd=$(pwd)
+    local ORIG_DIR=$(pwd)
+
+    if [ -n "$VIRTUAL_ENV" ]; then
+        local ORIG_ENV=$(basename $VIRTUAL_ENV)
+    fi
 
     if [ "$#" -eq 1 ]; then
         workon $1
@@ -17,6 +21,11 @@ function semicolon {
         deactivate
     else
         start_vim VIM
+    fi
+
+
+    if [ -n "$ORIG_ENV" ]; then
+        workon $ORIG_ENV
     fi
 
     cd $_pwd
