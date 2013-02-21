@@ -114,8 +114,10 @@ class ErrorStreamer(Plugin):
 
         location = '%s.%s' % (self._module, funname)
 
+        msg = value.message if hasattr(value, 'message') else ''
+
         msg = '%s ... %s    %s: %s' % (location, errtype,
-                etype.__name__, value.message)
+                etype.__name__, msg)
         errline = '%s:%d: %s' % (fname, lineno, msg)
         self._err_stream.write(errline + '\n')
 

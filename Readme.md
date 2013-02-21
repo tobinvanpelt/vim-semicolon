@@ -203,6 +203,12 @@ to remember to switch to the debugger pane and then back to vim quickly.
 Todos and Future Functionality
 ------------------------------
 
+- test the current function under the cursor
+- test the current file
+- test all
+- test each case with optional agruments
+
+
 - add/remove conditional breakpoints
 - add/remove ignores to a breakpoint
 - disable breakpoints
