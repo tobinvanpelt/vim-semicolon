@@ -444,16 +444,23 @@ def main():
             vimpdb.runcall_continue(context.setUp)
             vimpdb.runcall_continue(test.setUp)
 
-            # run target method
-            if options.cont:
-                vimpdb.runcall_continue(test.test, *test.arg)
+            try:
+                # run target method
+                if options.cont:
+                    vimpdb.runcall_continue(test.test, *test.arg)
 
-            else:
-                vimpdb.runcall(test.test, *test.arg)
+                else:
+                    vimpdb.runcall(test.test, *test.arg)
 
-            # run teardown with automatic continue
-            vimpdb.runcall_continue(context.tearDown)
-            vimpdb.runcall_continue(test.tearDown)
+            except:
+                pass
+
+            finally:
+                # run teardown with automatic continue
+                # Be sure it is always run even if there is an exception
+                vimpdb.runcall_continue(context.tearDown)
+                vimpdb.runcall_continue(test.tearDown)
+                import ipdb; ipdb.set_trace()
 
         header = blue('DEBUG TEST:  ') + cyan(mname + ':') + cname
         msgs = (header, red('TEST FAILED'), green('TEST SUCCEEDED'))
