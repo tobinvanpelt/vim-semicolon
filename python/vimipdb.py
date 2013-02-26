@@ -460,7 +460,6 @@ def main():
                 # Be sure it is always run even if there is an exception
                 vimpdb.runcall_continue(context.tearDown)
                 vimpdb.runcall_continue(test.tearDown)
-                import ipdb; ipdb.set_trace()
 
         header = blue('DEBUG TEST:  ') + cyan(mname + ':') + cname
         msgs = (header, red('TEST FAILED'), green('TEST SUCCEEDED'))
