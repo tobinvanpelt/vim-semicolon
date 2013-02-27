@@ -112,7 +112,7 @@ class VimPdb(Pdb):
         try:
             res = fcn(*args, **kwds)
 
-        except BdbQuit:
+        except:
             raise
 
         finally:
@@ -453,7 +453,7 @@ def main():
                     vimpdb.runcall(test.test, *test.arg)
 
             except:
-                pass
+                raise
 
             finally:
                 # run teardown with automatic continue
