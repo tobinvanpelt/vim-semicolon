@@ -203,6 +203,8 @@ to remember to switch to the debugger pane and then back to vim quickly.
 Todos and Future Functionality
 ------------------------------
 
+- when debugging a file (;d) a virtualenv must be specified before running 
+
 - test the current function under the cursor
 - test the current file
 - test all

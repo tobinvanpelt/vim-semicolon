@@ -28,7 +28,7 @@ function semicolon {
         workon $ORIG_ENV
     fi
 
-    cd $_pwd
+    cd $ORIG_DIR
 }
 
 compctl -k "( $(workon) )" semicolon
