@@ -433,7 +433,7 @@ def main():
         test = context._tests.next().test
 
         if isinstance(test, nose.failure.Failure):
-            print red('INVLAID TEST:  ') + cyan(mname + ':') + cname
+            print red('INVALID TEST:  ') + cyan(mname + ':') + cname
             raw_input(blue('\nPress any key to continue.'))
             sys.exit(1)  # quit request
 

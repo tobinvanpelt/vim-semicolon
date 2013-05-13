@@ -204,6 +204,8 @@ Todos and Future Functionality
 ------------------------------
 
 - when debugging a file (;d) a virtualenv must be specified before running 
+- appears to be an error with which virtualenv is used:  start a virtualenv,
+  then tmux, then switch virtualenv, then run semicolon
 
 - test the current function under the cursor
 - test the current file
