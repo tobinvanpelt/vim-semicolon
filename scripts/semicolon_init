@@ -31,4 +31,6 @@ function semicolon {
     cd $ORIG_DIR
 }
 
-compctl -k "( $(workon) )" semicolon
+if hash workon 2>/dev/null; then
+    compctl -k "( $(workon) )" semicolon
+fi
